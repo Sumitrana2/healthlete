@@ -1,0 +1,39 @@
+{
+  "name": "healthlete-backend",
+  "version": "1.0.0",
+  "description": "HealthLete API — athlete health media & decision intelligence platform",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "nodemon --exec tsx src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": ["healthlete", "athlete", "health", "media"],
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@types/pg": "^8.11.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.31.4",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "pg": "^8.12.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^20.14.10",
+    "drizzle-kit": "^0.22.8",
+    "nodemon": "^3.1.4",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3"
+  }
+}

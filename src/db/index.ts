@@ -2,6 +2,7 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { env } from '../config/env';
 import * as schema from './schema';
+import logger from '../config/logger';
 
 
 export const pool = new Pool({
@@ -18,7 +19,7 @@ export const pool = new Pool({
 });
 
 pool.on('error', (err) => {
-  console.error('❌ PostgreSQL pool error:', err.message);
+  logger.error({ err }, 'PostgreSQL pool error');
 });
 
 // ─── Drizzle ORM Instance ─────────────────────────────────────────────────────
@@ -30,10 +31,10 @@ export async function checkDatabaseConnection(): Promise<boolean> {
     const client = await pool.connect();
     await client.query('SELECT 1');
     client.release();
-    console.log('✅ PostgreSQL connected');
+    logger.info('PostgreSQL connected');
     return true;
   } catch (err) {
-    console.error('❌ PostgreSQL connection failed:', (err as Error).message);
+    logger.error({ err }, 'PostgreSQL connection failed');
     return false;
   }
 }
@@ -41,5 +42,6 @@ export async function checkDatabaseConnection(): Promise<boolean> {
 // ─── Graceful Shutdown ────────────────────────────────────────────────────────
 export async function closeDatabaseConnection(): Promise<void> {
   await pool.end();
-  console.log('🔌 PostgreSQL pool closed');
+  logger.info('PostgreSQL pool closed');
+
 }

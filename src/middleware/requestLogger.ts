@@ -1,5 +1,14 @@
-import morgan from 'morgan';
-import { env } from '../config/env';
+import pinoHttp from 'pino-http';
+import logger from '../config/logger';
 
-// Compact for dev, combined for production
-export const requestLogger = morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev');
+export const requestLogger = pinoHttp({
+  logger,
+  customLogLevel(req, res, err) {
+    if (res.statusCode >= 500 || err) return 'error';
+    if (res.statusCode >= 400) return 'warn';
+      return 'info';
+  },
+  customSuccessMessage(req, res) {
+    return `${req.method} ${req.url} — ${res.statusCode}`;
+  },
+});

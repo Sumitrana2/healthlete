@@ -47,3 +47,7 @@ export interface LoginResult {
   accessToken: string;
   refreshToken: string;
 }
+
+export interface LogoutResult {
+  message: string;
+}

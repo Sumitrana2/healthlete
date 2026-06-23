@@ -13,9 +13,15 @@ import type {
   MessageResult,
   ResetOtpResult,
   LoginResult,
+  LogoutResult,
 } from "./brand.auth.types";
-import { signAccessToken, signRefreshToken } from "../../../utils/jwt";
+import {
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+} from "../../../utils/jwt";
 import type { Request } from "express";
+import { AUTH } from "../../../constants/app.constants";
 
 export async function login(
   email: string,
@@ -35,6 +41,26 @@ export async function login(
       details: { reason: "brand_not_found" },
     });
     throw new AppError(401, "Invalid credentials", "INVALID_CREDENTIALS");
+  }
+
+  if (brand.lockedUntil && brand.lockedUntil > new Date()) {
+    const minutesLeft = Math.ceil(
+      (brand.lockedUntil.getTime() - Date.now()) / 60000
+    );
+    await brandRepo.insertAuthLog({
+      brandId: brand.id,
+      email: normalizedEmail,
+      action: "login",
+      status: "failed",
+      ip: req?.ip,
+      userAgent: req?.headers["user-agent"],
+      details: { reason: "account_locked", minutesLeft },
+    });
+    throw new AppError(
+      423,
+      `Account locked. Try again in ${minutesLeft} minutes.`,
+      "ACCOUNT_LOCKED"
+    );
   }
 
   if (!brand.isEmailVerified) {
@@ -97,7 +123,29 @@ export async function login(
   }
 
   const isPasswordValid = await bcrypt.compare(password, brand.passwordHash);
+
   if (!isPasswordValid) {
+    const updated = await brandRepo.incrementFailedAttempts(normalizedEmail);
+    const attempts = updated.failedLoginAttempts ?? 0;
+    if (attempts >= AUTH.MAX_FAILED_ATTEMPTS) {
+      const lockUntil = new Date(Date.now() + AUTH.LOCK_DURATION_MS);
+      await brandRepo.lockAccount(normalizedEmail, lockUntil);
+      await brandRepo.insertAuthLog({
+        brandId: brand.id,
+        email: normalizedEmail,
+        action: "login",
+        status: "failed",
+        ip: req?.ip,
+        userAgent: req?.headers["user-agent"],
+        details: { reason: "account_locked_now" },
+      });
+      throw new AppError(
+        423,
+        "Account locked for 24 hours due to too many failed attempts.",
+        "ACCOUNT_LOCKED"
+      );
+    }
+
     await brandRepo.insertAuthLog({
       brandId: brand.id,
       email: normalizedEmail,
@@ -105,11 +153,11 @@ export async function login(
       status: "failed",
       ip: req?.ip,
       userAgent: req?.headers["user-agent"],
-      details: { reason: "wrong_password" },
+      details: { reason: "wrong_password", attemptsLeft: 5 - attempts },
     });
     throw new AppError(401, "Invalid credentials", "INVALID_CREDENTIALS");
   }
-
+  await brandRepo.resetFailedAttempts(normalizedEmail);
   const maxSessions = await brandRepo.getMaxSessions();
   const activeCount = await brandRepo.countActiveSessions(brand.id);
   if (activeCount >= maxSessions) {
@@ -125,11 +173,14 @@ export async function login(
     email: brand.email,
     type: "brand" as const,
   };
+
   const accessToken = await signAccessToken(tokenPayload);
   const refreshToken = await signRefreshToken(tokenPayload);
 
   const refreshExpiresAt = new Date();
-  refreshExpiresAt.setDate(refreshExpiresAt.getDate() + 30);
+  refreshExpiresAt.setDate(
+    refreshExpiresAt.getDate() + AUTH.REFRESH_EXPIRES_DAYS
+  );
 
   await brandRepo.insertRefreshToken({
     brandId: brand.id,
@@ -166,7 +217,6 @@ export async function login(
     refreshToken,
   };
 }
-
 export async function register(input: RegisterInput): Promise<RegisterResult> {
   const email = input.email.toLowerCase().trim();
 
@@ -192,13 +242,18 @@ export async function register(input: RegisterInput): Promise<RegisterResult> {
     campaignDescription: input.campaignDescription,
     language: input.language,
     isEmailVerified: false,
-    approvalStatus: "pending",
+    approvalStatus: "approved",
   });
 
   if (input.categoryIds?.length) {
-    const taxonomyIds = await brandRepo.findTaxonomyIdsByExternalIds(input.categoryIds);
+    const taxonomyIds = await brandRepo.findTaxonomyIdsByExternalIds(
+      input.categoryIds
+    );
     await brandRepo.insertTaxonomySelections(brand.id, taxonomyIds);
-    logger.info({ brandId: brand.id, count: taxonomyIds.length }, 'Taxonomy selections saved');
+    logger.info(
+      { brandId: brand.id, count: taxonomyIds.length },
+      "Taxonomy selections saved"
+    );
   }
 
   const otp = await otpRepo.createOtp(email, "email_verify", brand.id);
@@ -218,16 +273,66 @@ export async function register(input: RegisterInput): Promise<RegisterResult> {
 
 export async function verifyEmailOtp(
   email: string,
-  otp: string
-): Promise<MessageResult> {
+  otp: string,
+  req?: Request
+): Promise<LoginResult> {
   const result = await otpRepo.verifyOtp(email, otp, "email_verify");
   if (!result.valid)
     throw new AppError(400, "Invalid or expired OTP", result.reason);
 
   await otpRepo.markOtpUsed(result.record.id);
-  await brandRepo.updateBrandByEmail(email, { isEmailVerified: true });
+  const brand = await brandRepo.updateBrandByEmail(email, {
+    isEmailVerified: true,
+  });
 
-  return { message: "Email verified. Waiting for admin approval." };
+  const tokenPayload = {
+    id: brand.id,
+    email: brand.email,
+    type: "brand" as const,
+  };
+
+  const accessToken = await signAccessToken(tokenPayload);
+  const refreshToken = await signRefreshToken(tokenPayload);
+
+  const refreshExpiresAt = new Date();
+  refreshExpiresAt.setDate(
+    refreshExpiresAt.getDate() + AUTH.REFRESH_EXPIRES_DAYS
+  );
+
+  await brandRepo.insertRefreshToken({
+    brandId: brand.id,
+    token: refreshToken,
+    expiresAt: refreshExpiresAt,
+    deviceInfo: { ip: req?.ip, userAgent: req?.headers["user-agent"] },
+  });
+
+  await brandRepo.updateBrandByEmail(email, {
+    lastLoginAt: new Date(),
+  });
+
+  await brandRepo.insertAuthLog({
+    brandId: brand.id,
+    email: email,
+    action: "login",
+    status: "success",
+    ip: req?.ip,
+    userAgent: req?.headers["user-agent"],
+  });
+
+  logger.info({ brandId: brand.id }, "Brand logged in");
+
+  return {
+    brand: {
+      id: brand.id,
+      email: brand.email,
+      firstName: brand.firstName,
+      lastName: brand.lastName,
+      companyName: brand.companyName,
+      approvalStatus: brand.approvalStatus!,
+    },
+    accessToken,
+    refreshToken,
+  };
 }
 
 export async function resendOtp(
@@ -290,4 +395,70 @@ export async function resetPassword(
   });
 
   return { message: "Password reset successful. Please login again." };
+}
+
+export async function refreshToken(
+  token: string,
+  req?: Request
+): Promise<{ accessToken: string; refreshToken: string }> {
+  const payload = await verifyRefreshToken(token).catch(() => {
+    throw new AppError(401, "Invalid refresh token", "INVALID_REFRESH_TOKEN");
+  });
+
+  const storedToken = await brandRepo.findActiveRefreshToken(token);
+  if (!storedToken) {
+    throw new AppError(
+      401,
+      "Invalid or expired refresh token",
+      "INVALID_REFRESH_TOKEN"
+    );
+  }
+  await brandRepo.revokeRefreshTokenById(storedToken.id);
+
+  const tokenPayload = {
+    id: payload.id,
+    email: payload.email,
+    type: "brand" as const,
+  };
+
+  const accessToken = await signAccessToken(tokenPayload);
+  const newRefreshToken = await signRefreshToken(tokenPayload);
+
+  const refreshExpiresAt = new Date();
+  refreshExpiresAt.setDate(refreshExpiresAt.getDate() + 30);
+
+  await brandRepo.insertRefreshToken({
+    brandId: payload.id,
+    token: newRefreshToken,
+    expiresAt: refreshExpiresAt,
+    deviceInfo: {
+      ip: req?.ip,
+      userAgent: req?.headers["user-agent"] as string,
+    },
+  });
+
+  logger.info({ brandId: payload.id }, "Token refreshed");
+
+  return { accessToken, refreshToken: newRefreshToken };
+}
+
+export async function logout(
+  refreshToken: string,
+  brandId: string,
+  req?: Request
+): Promise<LogoutResult> {
+  const storedToken = await brandRepo.findActiveRefreshToken(refreshToken);
+  if (storedToken) {
+    await brandRepo.revokeRefreshTokenById(storedToken.id);
+  }
+  await brandRepo.insertAuthLog({
+    brandId,
+    email: "",
+    action: "logout",
+    status: "success",
+    ip: req?.ip,
+    userAgent: req?.headers["user-agent"],
+  });
+  logger.info({ brandId }, "Brand logged out");
+  return { message: "Logged out successfully" };
 }

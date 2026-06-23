@@ -8,7 +8,13 @@ import {
 
 export const registerSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Must contain at least one number")
+    .regex(/[^A-Za-z0-9]/, "Must contain at least one special character"),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   companyName: z.string().min(1),
@@ -44,7 +50,13 @@ export const verifyResetOtpSchema = z.object({
 export const resetPasswordSchema = z.object({
   email: z.string().email(),
   resetToken: z.string().min(1),
-  newPassword: z.string().min(8),
+  newPassword: z
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .regex(/[A-Z]/, "Must contain at least one uppercase letter")
+  .regex(/[a-z]/, "Must contain at least one lowercase letter")
+  .regex(/[0-9]/, "Must contain at least one number")
+  .regex(/[^A-Za-z0-9]/, "Must contain at least one special character"),
 });
 
 export const loginSchema = z.object({

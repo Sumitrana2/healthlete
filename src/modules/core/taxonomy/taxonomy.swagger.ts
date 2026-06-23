@@ -11,7 +11,7 @@ registry.registerPath({
   path:    "/common/taxonomy",
   tags:    ["Taxonomy"],
   summary: "Get taxonomy list — categories or interests by platform",
-  description: "Query string ke bina full taxonomy milega. platform + kind dono zaroori hain filtered list ke liye.",
+  description: "Without query parameters, the full taxonomy will be returned. Both platform and kind are required to get a filtered list.",
   request: {
     query: z.object({
       platform: z.enum(['ig', 'yt']).optional().describe("Platform: ig | yt"),

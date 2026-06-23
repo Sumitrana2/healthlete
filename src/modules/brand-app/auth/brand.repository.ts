@@ -8,6 +8,7 @@ import {
 import { eq, and, isNull, sql } from "drizzle-orm";
 import { platformTaxonomy, brandTaxonomySelections } from "../../../db/schema";
 import { inArray } from "drizzle-orm";
+import { AUTH } from "../../../constants/app.constants";
 
 export async function findBrandByEmail(email: string) {
   const [brand] = await db.select().from(brands).where(eq(brands.email, email));
@@ -135,14 +136,12 @@ export async function getMaxSessions(): Promise<number> {
     .select()
     .from(appSettings)
     .where(eq(appSettings.key, "brand_max_sessions"));
-  return setting ? Number(setting.value) : 3;
+  return setting ? Number(setting.value) : AUTH.MAX_SESSIONS;
 }
 
 export async function insertAuthLog(values: typeof authLogs.$inferInsert) {
   await db.insert(authLogs).values(values);
 }
-
-
 
 export async function findTaxonomyIdsByExternalIds(externalIds: number[]) {
   if (!externalIds.length) return [];
@@ -192,4 +191,37 @@ export async function insertTaxonomySelections(
     .insert(brandTaxonomySelections)
     .values(taxonomyIds.map((taxonomyId) => ({ brandId, taxonomyId })))
     .onConflictDoNothing();
+}
+
+export async function incrementFailedAttempts(email: string) {
+  const [brand] = await db
+    .update(brands)
+    .set({
+      failedLoginAttempts: sql`${brands.failedLoginAttempts} + 1`,
+      updatedAt: new Date(),
+    })
+    .where(eq(brands.email, email))
+    .returning();
+  return brand;
+}
+
+export async function resetFailedAttempts(email: string) {
+  await db
+    .update(brands)
+    .set({
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+      updatedAt: new Date(),
+    })
+    .where(eq(brands.email, email));
+}
+
+export async function lockAccount(email: string, until: Date) {
+  await db
+    .update(brands)
+    .set({
+      lockedUntil: until,
+      updatedAt: new Date(),
+    })
+    .where(eq(brands.email, email));
 }

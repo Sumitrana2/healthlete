@@ -2,10 +2,10 @@ import { Router } from "express";
 const router = Router();
 router.get(
     "/me",
-    async (_req, res) => {
+    async (req, res) => {
       res.json({
         success: true,
-        data:{}
+        data:req.brand
       });
     }
   );

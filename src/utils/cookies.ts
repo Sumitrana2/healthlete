@@ -1,5 +1,6 @@
 import { Response } from "express";
 import { env } from "../config/env";
+import { AUTH } from "../constants/app.constants";
 
 const isProd = env.NODE_ENV === "production";
 
@@ -16,7 +17,7 @@ export function setAuthCookies(
     secure: isProd,
     sameSite: isProd ? "none" : "lax",
     domain: isProd ? ".healthlete.com" : undefined,
-    maxAge: 15 * 60 * 1000,
+    maxAge: AUTH.ACCESS_TOKEN_MAX_AGE_MS,
     path: "/",
   });
 
@@ -25,8 +26,8 @@ export function setAuthCookies(
     secure: isProd,
     sameSite: isProd ? "none" : "lax",
     domain: isProd ? ".healthlete.com" : undefined,
-    maxAge: 30 * 24 * 60 * 60 * 1000,
-    path: `/api/v1/${type}/auth/refresh`,
+    maxAge: AUTH.REFRESH_TOKEN_MAX_AGE_MS,
+    path: isProd ? `/api/v1/${type}/auth/refresh` : "/", 
   });
 }
 
@@ -46,6 +47,6 @@ export function clearAuthCookies(res: Response, type: "brand" | "admin") {
     secure: isProd,
     sameSite: isProd ? "none" : "lax",
     domain: isProd ? ".healthlete.com" : undefined,
-    path: `/api/v1/${type}/auth/refresh`,
+    path: isProd ? `/api/v1/${type}/auth/refresh` : "/", 
   });
 }

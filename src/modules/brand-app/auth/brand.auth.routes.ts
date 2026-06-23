@@ -10,10 +10,14 @@ import {
   loginSchema
 } from "./brand.auth.schema";
 import { validate } from "../../../middleware/validate";
-import { setAuthCookies } from "../../../utils/cookies";
+import { clearAuthCookies, setAuthCookies } from "../../../utils/cookies";
+import { AppError } from "../../../middleware/errorHandler";
+import { authRateLimiter, otpRateLimiter } from "../../../middleware/rateLimiter";
+import { verifyAccessToken } from "../../../utils/jwt";
+
 const router = Router();
 
-router.post("/login", validate(loginSchema), async (req, res, next) => {
+router.post("/login", authRateLimiter,validate(loginSchema), async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const result = await authService.login(email, password, req);
@@ -33,7 +37,7 @@ router.post("/login", validate(loginSchema), async (req, res, next) => {
   }
 });
 
-router.post("/register", validate(registerSchema), async (req, res, next) => {
+router.post("/register", authRateLimiter,validate(registerSchema), async (req, res, next) => {
   try {
     const result = await authService.register(req.body);
     res.status(201).json({ success: true, data: result });
@@ -44,12 +48,22 @@ router.post("/register", validate(registerSchema), async (req, res, next) => {
 
 router.post(
   "/verify-email-otp",
+  otpRateLimiter,
   validate(verifyEmailOtpSchema),
   async (req, res, next) => {
     try {
       const { email, otp } = req.body;
-      const result = await authService.verifyEmailOtp(email, otp);
-      res.json({ success: true, data: result });
+      const result = await authService.verifyEmailOtp(email, otp,req);
+      setAuthCookies(
+        res,
+        {
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+        },
+        "brand"
+      );
+  
+      res.json({ success: true, data: { brand: result.brand } });
     } catch (err) {
       next(err);
     }
@@ -58,6 +72,7 @@ router.post(
 
 router.post(
   "/resend-otp",
+  otpRateLimiter,
   validate(resendOtpSchema),
   async (req, res, next) => {
     try {
@@ -72,6 +87,7 @@ router.post(
 
 router.post(
   "/forgot-password",
+  otpRateLimiter,
   validate(forgotPasswordSchema),
   async (req, res, next) => {
     try {
@@ -86,6 +102,7 @@ router.post(
 
 router.post(
   "/verify-reset-otp",
+  otpRateLimiter,
   validate(verifyResetOtpSchema),
   async (req, res, next) => {
     try {
@@ -115,5 +132,39 @@ router.post(
     }
   }
 );
+
+router.post("/refresh", async (req, res, next) => {
+  try {
+    const token = req.cookies["brand_refresh_token"];
+    if (!token) {
+      throw new AppError(401, "No refresh token found", "NO_REFRESH_TOKEN");
+    }
+    const tokens = await authService.refreshToken(token, req);
+    setAuthCookies(res, tokens, "brand");
+    res.json({ success: true, data: { message: "Token refreshed" } });
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+router.post("/logout", async (req, res, next) => {
+  try {
+    const accessToken  = req.cookies["brand_access_token"];
+    const refreshToken = req.cookies["brand_refresh_token"];
+    let brandId = '';
+    if (accessToken) {
+      const payload = await verifyAccessToken(accessToken).catch(() => null);
+      if (payload) brandId = payload.id;
+    }
+    if (refreshToken) {
+      await authService.logout(refreshToken, brandId, req);
+    }
+    clearAuthCookies(res, 'brand');
+    res.json({ success: true, data: { message: 'Logged out successfully' } });
+  } catch (err) {
+    next(err);
+  }
+});
 
 export default router;

@@ -31,7 +31,16 @@ registry.registerPath({
         "application/json": {
           schema: z.object({
             email: z.string().email(),
-            password: z.string().min(8),
+            password: z
+              .string()
+              .min(8, "Password must be at least 8 characters")
+              .regex(/[A-Z]/, "Must contain at least one uppercase letter")
+              .regex(/[a-z]/, "Must contain at least one lowercase letter")
+              .regex(/[0-9]/, "Must contain at least one number")
+              .regex(
+                /[^A-Za-z0-9]/,
+                "Must contain at least one special character"
+              ),
             firstName: z.string().min(1),
             lastName: z.string().min(1),
             companyName: z.string().min(1),
@@ -127,11 +136,37 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: "Email verified, waiting for admin approval",
-      content: { "application/json": { schema: messageResponseSchema } },
+      description: "Login successful — tokens set as httpOnly cookies",
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.literal(true),
+            data: z.object({
+              brand: z.object({
+                id: z.string().uuid(),
+                email: z.string().email(),
+                firstName: z.string(),
+                lastName: z.string(),
+                companyName: z.string(),
+                approvalStatus: z.enum(["pending", "approved", "rejected"]),
+              }),
+            }),
+          }),
+        },
+      },
     },
+    401: { description: "Invalid credentials" },
+    403: { description: "Email not verified, or approval pending/rejected" },
     400: { description: "Invalid or expired OTP" },
+
   },
+//   responses: {
+//     200: {
+//       description: "Email verified, waiting for admin approval",
+//       content: { "application/json": { schema: messageResponseSchema } },
+//     },
+//     400: { description: "Invalid or expired OTP" },
+//   },
 });
 
 registry.registerPath({
@@ -230,5 +265,50 @@ registry.registerPath({
       content: { "application/json": { schema: messageResponseSchema } },
     },
     400: { description: "Invalid or expired reset token" },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/brand/auth/refresh",
+  tags: ["Brand Auth"],
+  summary: "Refresh access token using refresh token cookie",
+  description:
+    "A new access token and refresh token will be generated using the refresh token from the cookie. The old refresh token will be revoked.",
+  responses: {
+    200: {
+      description: "Tokens refreshed — new cookies set",
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.literal(true),
+            data: z.object({ message: z.string() }),
+          }),
+        },
+      },
+    },
+    401: { description: "No refresh token or invalid/expired token" },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/brand/auth/logout",
+  tags: ["Brand Auth"],
+  summary: "Logout — clears cookies and revokes refresh token",
+  description:
+    "Logout will still work even if the access token has expired — the cookies will be cleared.",
+  responses: {
+    200: {
+      description: "Logged out successfully",
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.literal(true),
+            data: z.object({ message: z.string() }),
+          }),
+        },
+      },
+    },
   },
 });

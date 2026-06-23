@@ -4,7 +4,6 @@ import { env } from '../config/env';
 import * as schema from './schema';
 import logger from '../config/logger';
 
-
 export const pool = new Pool({
   host: env.DB_HOST,
   port: Number(env.DB_PORT),
@@ -22,10 +21,8 @@ pool.on('error', (err) => {
   logger.error({ err }, 'PostgreSQL pool error');
 });
 
-// ─── Drizzle ORM Instance ─────────────────────────────────────────────────────
 export const db = drizzle(pool, { schema });
 
-// ─── Health Check ─────────────────────────────────────────────────────────────
 export async function checkDatabaseConnection(): Promise<boolean> {
   try {
     const client = await pool.connect();
@@ -39,7 +36,6 @@ export async function checkDatabaseConnection(): Promise<boolean> {
   }
 }
 
-// ─── Graceful Shutdown ────────────────────────────────────────────────────────
 export async function closeDatabaseConnection(): Promise<void> {
   await pool.end();
   logger.info('PostgreSQL pool closed');

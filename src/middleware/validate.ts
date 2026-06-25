@@ -9,13 +9,17 @@ export const validate =
     const result = schema.safeParse(req[source]);
 
     if (!result.success) {
+      const fieldErrors = result.error.flatten().fieldErrors;
+      const firstField   = Object.keys(fieldErrors)[0];
+      const firstMessage = firstField
+        ? (fieldErrors[firstField]?.[0] ?? "Validation failed")
+        : "Validation failed";
+
       return res.status(400).json({
         success: false,
-        error: {
-          code: "VALIDATION_ERROR",
-          message: "Invalid data",
-          details: result.error.flatten().fieldErrors,
-        },
+        message: firstMessage,
+        code:    "VALIDATION_ERROR",
+        errors:  fieldErrors,
       });
     }
 

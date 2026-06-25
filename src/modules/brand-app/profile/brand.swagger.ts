@@ -1,21 +1,22 @@
 import { registry } from "../../../config/swagger";
 import { z } from "zod";
+import {
+  successResponse,
+  errorResponse,
+} from "../../../utils/swaggerSchemas";
 
-const profileResponseSchema = z.object({
-  success: z.literal(true),
-  data: z.object({
-    // id: z.string().uuid(),
-    // email: z.string().email(),
-    // firstName: z.string(),
-    // lastName: z.string(),
-    // companyName: z.string(),
-    // role: z.string().nullable().optional(),
-    // approvalStatus: z.enum(["pending", "approved", "rejected"]),
-    // isEmailVerified: z.boolean(),
-    // lastLoginAt: z.string().datetime().nullable().optional(),
-    // createdAt: z.string().datetime(),
-  }),
-});
+const profileResponseSchema = successResponse(
+  z.object({
+    id: z.string().uuid(),
+    email: z.string().email(),
+    companyName: z.string(),
+    approvalStatus: z.enum([
+      "pending",
+      "approved",
+      "rejected",
+    ]),
+  })
+);
 
 registry.registerPath({
   method: "get",
@@ -39,6 +40,11 @@ registry.registerPath({
     },
     401: {
       description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
     },
   },
 });

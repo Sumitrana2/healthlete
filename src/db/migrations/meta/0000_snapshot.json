@@ -1,5 +1,5 @@
 {
-  "id": "b5b754f0-3ccf-4a86-9709-a81cb50dd369",
+  "id": "e97ead15-0d9e-439f-96d5-3991cfdca374",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -194,7 +194,34 @@
           "with": {}
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "brand_taxonomy_selections_brand_id_brands_id_fk": {
+          "name": "brand_taxonomy_selections_brand_id_brands_id_fk",
+          "tableFrom": "brand_taxonomy_selections",
+          "tableTo": "brands",
+          "columnsFrom": [
+            "brand_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "brand_taxonomy_selections_taxonomy_id_platform_taxonomy_id_fk": {
+          "name": "brand_taxonomy_selections_taxonomy_id_platform_taxonomy_id_fk",
+          "tableFrom": "brand_taxonomy_selections",
+          "tableTo": "platform_taxonomy",
+          "columnsFrom": [
+            "taxonomy_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
@@ -427,27 +454,27 @@
           "primaryKey": false,
           "notNull": false
         },
-        "role_id": {
-          "name": "role_id",
-          "type": "uuid",
+        "role": {
+          "name": "role",
+          "type": "varchar(100)",
           "primaryKey": false,
           "notNull": false
         },
-        "request_type_id": {
-          "name": "request_type_id",
-          "type": "uuid",
+        "request_type": {
+          "name": "request_type",
+          "type": "varchar(100)",
           "primaryKey": false,
           "notNull": false
         },
-        "budget_range_id": {
-          "name": "budget_range_id",
-          "type": "uuid",
+        "budget_range": {
+          "name": "budget_range",
+          "type": "varchar(100)",
           "primaryKey": false,
           "notNull": false
         },
-        "timeline_id": {
-          "name": "timeline_id",
-          "type": "uuid",
+        "timeline": {
+          "name": "timeline",
+          "type": "varchar(100)",
           "primaryKey": false,
           "notNull": false
         },
@@ -492,6 +519,19 @@
         },
         "reviewed_at": {
           "name": "reviewed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "failed_login_attempts": {
+          "name": "failed_login_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "locked_until": {
+          "name": "locked_until",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
@@ -771,6 +811,18 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true
+        },
+        "reset_token": {
+          "name": "reset_token",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reset_token_expires_at": {
+          "name": "reset_token_expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",

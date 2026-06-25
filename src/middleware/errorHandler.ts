@@ -16,10 +16,9 @@ export class AppError extends Error {
 export function notFoundHandler(req: Request, res: Response) {
   res.status(404).json({
     success: false,
-    error: {
-      code: "NOT_FOUND",
-      message: `Route ${req.method} ${req.path} not found`,
-    },
+    message: `Route ${req.method} ${req.path} not found`,
+    code: "NOT_FOUND",
+    errors: null,
   });
 }
 
@@ -39,37 +38,6 @@ function resolveStatusCode(err: Error): number {
   return 500;
 }
 
-export function errorHandler(
-  err: Error | AppError,
-  req: Request,
-  res: Response,
-  _next: NextFunction
-) {
-  if (err instanceof AppError) {
-    return res.status(err.statusCode).json({
-      success: false,
-      error: {
-        code: err.code ?? "APP_ERROR",
-        message: err.message,
-        ...(process.env.NODE_ENV !== "production" && { details: err.details }),
-      },
-    });
-  }
-  const statusCode = resolveStatusCode(err);
-  logger.error({ err, statusCode }, "Unhandled error");
-
-  return res.status(statusCode).json({
-    success: false,
-    error: {
-      code: resolveErrorCode(statusCode),
-      message:
-        process.env.NODE_ENV === "production"
-          ? "Internal server error"
-          : err.message,
-    },
-  });
-}
-
 function resolveErrorCode(status: number): string {
   const codes: Record<number, string> = {
     400: "BAD_REQUEST",
@@ -82,4 +50,33 @@ function resolveErrorCode(status: number): string {
     504: "GATEWAY_TIMEOUT",
   };
   return codes[status] ?? "INTERNAL_ERROR";
+}
+
+export function errorHandler(
+  err: Error | AppError,
+  req: Request,
+  res: Response,
+  _next: NextFunction
+) {
+  if (err instanceof AppError) {
+    return res.status(err.statusCode).json({
+      success: false,
+      message: err.message,
+      code: err.code ?? "APP_ERROR",
+      errors: process.env.NODE_ENV !== "production" ? err.details : null,
+    });
+  }
+
+  const statusCode = resolveStatusCode(err);
+  logger.error({ err, statusCode }, "Unhandled error");
+
+  return res.status(statusCode).json({
+    success: false,
+    message:
+      process.env.NODE_ENV === "production"
+        ? "Internal server error"
+        : err.message,
+    code: resolveErrorCode(statusCode),
+    errors: null,
+  });
 }

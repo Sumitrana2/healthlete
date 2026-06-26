@@ -8,6 +8,10 @@ import {
   authLogs,
 } from "./auth";
 
+import { admins } from './admins';
+import { adminOtpVerifications, adminRefreshTokens, adminAuthLogs } from './admin-auth';
+
+
 // ── Brands ────────────────────────────────────────────────────────────────────
 export const brandsRelations = relations(brands, ({ many }) => ({
   approvalLogs: many(brandApprovalLogs),
@@ -85,4 +89,32 @@ export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({
 // ── Auth Logs ─────────────────────────────────────────────────────────────────
 export const authLogsRelations = relations(authLogs, ({ one }) => ({
   brand: one(brands, { fields: [authLogs.brandId], references: [brands.id] }),
+}));
+
+
+
+
+
+// ############################# Admin ########################################
+
+// ── Admins ────────────────────────────────────────────────────────────────────
+export const adminsRelations = relations(admins, ({ many }) => ({
+  otpVerifications: many(adminOtpVerifications),
+  refreshTokens:    many(adminRefreshTokens),
+  authLogs:         many(adminAuthLogs),
+}));
+
+// ── Admin OTP ─────────────────────────────────────────────────────────────────
+export const adminOtpRelations = relations(adminOtpVerifications, ({ one }) => ({
+  admin: one(admins, { fields: [adminOtpVerifications.adminId], references: [admins.id] }),
+}));
+
+// ── Admin Refresh Tokens ──────────────────────────────────────────────────────
+export const adminRefreshTokensRelations = relations(adminRefreshTokens, ({ one }) => ({
+  admin: one(admins, { fields: [adminRefreshTokens.adminId], references: [admins.id] }),
+}));
+
+// ── Admin Auth Logs ───────────────────────────────────────────────────────────
+export const adminAuthLogsRelations = relations(adminAuthLogs, ({ one }) => ({
+  admin: one(admins, { fields: [adminAuthLogs.adminId], references: [admins.id] }),
 }));

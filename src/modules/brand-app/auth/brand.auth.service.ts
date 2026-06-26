@@ -350,12 +350,13 @@ export async function resendOtp(
 
 export async function forgotPassword(email: string): Promise<MessageResult> {
   const brand = await brandRepo.findBrandByEmail(email);
-  if (!brand) return { message: "If this email exists, an OTP has been sent." };
+  if (!brand) throw new AppError(401, "Email doesn't exist.", "INVALID_EMAIL");
+
 
   const otp = await otpRepo.createOtp(email, "forgot_password", brand.id);
   await sendOtpEmail(email, otp, "forgot_password");
 
-  return { message: "If this email exists, an OTP has been sent." };
+  return { message: "OTP has been sent on your email." };
 }
 
 export async function verifyResetOtp(

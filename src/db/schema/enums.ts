@@ -9,3 +9,9 @@ export const otpPurposeEnum = pgEnum("otp_purpose", [
   "email_verify",
   "forgot_password",
 ]);
+
+export const adminRoleEnum = pgEnum("admin_role", [
+  "super_admin",
+  "admin",
+  "sub_admin",
+]);

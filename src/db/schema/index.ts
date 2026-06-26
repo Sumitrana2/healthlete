@@ -3,5 +3,7 @@ export * from './lookup';
 export * from './taxonomy';
 export * from './brands';
 export * from './auth';
+export * from './admins';       
+export * from './admin-auth';   
 export * from './settings';
 export * from './relations'; 

@@ -24,11 +24,6 @@ registry.registerPath({
   tags: ["Brand Profile"],
   summary: "Get logged-in brand profile",
   description: "Returns the profile of the authenticated brand.",
-  security: [
-    {
-      cookieAuth: [],
-    },
-  ],
   responses: {
     200: {
       description: "Profile fetched successfully",

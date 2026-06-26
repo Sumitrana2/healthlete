@@ -121,6 +121,7 @@ router.post(
     try {
       const { email } = req.body;
       const result = await authService.forgotPassword(email);
+
       res.json({
         success: true,
         message: result.message,

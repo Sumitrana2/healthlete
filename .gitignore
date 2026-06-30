@@ -18,3 +18,4 @@ Thumbs.db
 
 # DB migration artifacts (keep schema, exclude auto-generated SQL unless committing migrations)
 src/db/migrations/*.sql
+src/db/migrations/meta/*

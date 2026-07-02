@@ -10,10 +10,10 @@ router.get("/", validate(taxonomyQuerySchema,"query"), async (req, res, next) =>
     const query = req.query as unknown as TaxonomyQuery;
 
     const data = await taxonomyService.getTaxonomy(query);
-
     res.json({
-      success: true,
-      data,
+        success: true,
+        message: "Category List",
+        data:{list:data},
     });
   } catch (err) {
     next(err);

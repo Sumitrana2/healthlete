@@ -1,24 +1,38 @@
 import { registry } from "../../../config/swagger";
 import { z } from "zod";
+import { successResponse, errorResponse } from "../../../utils/swaggerSchemas";
 
-const messageResponseSchema = z.object({
-  success: z.literal(true),
-  data: z.object({ message: z.string() }),
+const brandSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  firstName: z.string(),
+  lastName: z.string(),
+  companyName: z.string(),
+  approvalStatus: z.enum(["pending", "approved", "rejected"]),
 });
 
-const registerResponseSchema = z.object({
-  success: z.literal(true),
-  data: z.object({
+const registerResponseSchema = successResponse(
+  z.object({
     brandId: z.string().uuid(),
     email: z.string().email(),
-    message: z.string(),
-  }),
-});
+  })
+);
 
-const resetOtpResponseSchema = z.object({
-  success: z.literal(true),
-  data: z.object({ resetToken: z.string() }),
-});
+const loginResponseSchema = successResponse(
+  z.object({
+    brand: brandSchema,
+  })
+);
+
+const resetOtpResponseSchema = successResponse(
+  z.object({
+    resetToken: z.string(),
+  })
+);
+
+const genericResponseSchema = successResponse(z.object({}));
+
+const emptyResponseSchema = successResponse(z.object({}));
 
 registry.registerPath({
   method: "post",
@@ -31,7 +45,16 @@ registry.registerPath({
         "application/json": {
           schema: z.object({
             email: z.string().email(),
-            password: z.string().min(8),
+            password: z
+              .string()
+              .min(8, "Password must be at least 8 characters")
+              .regex(/[A-Z]/, "Must contain at least one uppercase letter")
+              .regex(/[a-z]/, "Must contain at least one lowercase letter")
+              .regex(/[0-9]/, "Must contain at least one number")
+              .regex(
+                /[^A-Za-z0-9]/,
+                "Must contain at least one special character"
+              ),
             firstName: z.string().min(1),
             lastName: z.string().min(1),
             companyName: z.string().min(1),
@@ -56,10 +79,28 @@ registry.registerPath({
   responses: {
     201: {
       description: "Registration successful, OTP sent to email",
-      content: { "application/json": { schema: registerResponseSchema } },
+      content: {
+        "application/json": {
+          schema: registerResponseSchema,
+        },
+      },
     },
-    409: { description: "Email already registered" },
-    400: { description: "Validation error" },
+    400: {
+      description: "Validation error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    409: {
+      description: "Email already registered",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
   },
 });
 
@@ -84,27 +125,29 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: "Login successful — tokens set as httpOnly cookies",
+      description: "Login successful",
       content: {
         "application/json": {
-          schema: z.object({
-            success: z.literal(true),
-            data: z.object({
-              brand: z.object({
-                id: z.string().uuid(),
-                email: z.string().email(),
-                firstName: z.string(),
-                lastName: z.string(),
-                companyName: z.string(),
-                approvalStatus: z.enum(["pending", "approved", "rejected"]),
-              }),
-            }),
-          }),
+          schema: loginResponseSchema,
         },
       },
     },
-    401: { description: "Invalid credentials" },
-    403: { description: "Email not verified, or approval pending/rejected" },
+    401: {
+      description: "Invalid credentials",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    403: {
+      description: "Email not verified or approval pending/rejected",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
   },
 });
 
@@ -127,10 +170,29 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: "Email verified, waiting for admin approval",
-      content: { "application/json": { schema: messageResponseSchema } },
+      description: "Email verified",
+      content: {
+        "application/json": {
+          schema: loginResponseSchema,
+        },
+      },
     },
-    400: { description: "Invalid or expired OTP" },
+    400: {
+      description: "Invalid or expired OTP",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
   },
 });
 
@@ -154,9 +216,20 @@ registry.registerPath({
   responses: {
     200: {
       description: "OTP resent",
-      content: { "application/json": { schema: messageResponseSchema } },
+      content: {
+        "application/json": {
+          schema: genericResponseSchema,
+        },
+      },
     },
-    404: { description: "Account not found" },
+    404: {
+      description: "Account not found",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
   },
 });
 
@@ -168,14 +241,22 @@ registry.registerPath({
   request: {
     body: {
       content: {
-        "application/json": { schema: z.object({ email: z.string().email() }) },
+        "application/json": {
+          schema: z.object({
+            email: z.string().email(),
+          }),
+        },
       },
     },
   },
   responses: {
     200: {
-      description: "OTP sent if account exists (generic message for security)",
-      content: { "application/json": { schema: messageResponseSchema } },
+      description: "OTP sent if account exists",
+      content: {
+        "application/json": {
+          schema: genericResponseSchema,
+        },
+      },
     },
   },
 });
@@ -200,9 +281,20 @@ registry.registerPath({
   responses: {
     200: {
       description: "OTP verified, reset token issued",
-      content: { "application/json": { schema: resetOtpResponseSchema } },
+      content: {
+        "application/json": {
+          schema: resetOtpResponseSchema,
+        },
+      },
     },
-    400: { description: "Invalid or expired OTP" },
+    400: {
+      description: "Invalid or expired OTP",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
   },
 });
 
@@ -227,8 +319,65 @@ registry.registerPath({
   responses: {
     200: {
       description: "Password reset successful",
-      content: { "application/json": { schema: messageResponseSchema } },
+      content: {
+        "application/json": {
+          schema: genericResponseSchema,
+        },
+      },
     },
-    400: { description: "Invalid or expired reset token" },
+    400: {
+      description: "Invalid or expired reset token",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/brand/auth/refresh",
+  tags: ["Brand Auth"],
+  summary: "Refresh access token using refresh token cookie",
+  description:
+    "A new access token and refresh token will be generated using the refresh token from the cookie. The old refresh token will be revoked.",
+  responses: {
+    200: {
+      description: "Tokens refreshed",
+      content: {
+        "application/json": {
+          schema: emptyResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "No refresh token or invalid/expired token",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/brand/auth/logout",
+  tags: ["Brand Auth"],
+  summary: "Logout — clears cookies and revokes refresh token",
+  description:
+    "Logout will still work even if the access token has expired — the cookies will be cleared.",
+  responses: {
+    200: {
+      description: "Logged out successfully",
+      content: {
+        "application/json": {
+          schema: emptyResponseSchema,
+        },
+      },
+    },
   },
 });

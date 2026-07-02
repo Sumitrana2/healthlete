@@ -6,6 +6,7 @@ import {
   boolean,
   timestamp,
   index,
+  integer,
 } from "drizzle-orm/pg-core";
 import { approvalStatusEnum } from "./enums";
 
@@ -34,6 +35,9 @@ export const brands = pgTable(
     approvalStatus: approvalStatusEnum("approval_status").default("pending"),
     reviewedBy: uuid("reviewed_by"),
     reviewedAt: timestamp("reviewed_at"),
+
+    failedLoginAttempts: integer("failed_login_attempts").default(0),
+    lockedUntil: timestamp("locked_until"),
 
     isActive: boolean("is_active").default(true),
     lastLoginAt: timestamp("last_login_at"),

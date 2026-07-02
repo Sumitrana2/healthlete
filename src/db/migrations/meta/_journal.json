@@ -5,29 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1781867216209,
-      "tag": "0000_late_stephen_strange",
+      "when": 1782306107372,
+      "tag": "0000_striped_dark_beast",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1781870077114,
-      "tag": "0001_fantastic_mephistopheles",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1781876826116,
-      "tag": "0002_special_major_mapleleaf",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1782133462513,
-      "tag": "0003_fixed_alex_wilder",
+      "when": 1782373004560,
+      "tag": "0001_even_tenebrous",
       "breakpoints": true
     }
   ]

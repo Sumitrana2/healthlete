@@ -210,7 +210,7 @@ export async function login(
       email: brand.email,
       firstName: brand.firstName,
       lastName: brand.lastName,
-      companyName: brand.companyName,
+      // companyName: brand.companyName,
       approvalStatus: brand.approvalStatus!,
     },
     accessToken,
@@ -220,41 +220,42 @@ export async function login(
 export async function register(input: RegisterInput): Promise<RegisterResult> {
   const email = input.email.toLowerCase().trim();
 
+  
   const existing = await brandRepo.findBrandIdByEmail(email);
   if (existing)
     throw new AppError(409, "Email already registered", "EMAIL_EXISTS");
 
   const passwordHash = await bcrypt.hash(input.password, 12);
-  const slug = await makeUniqueSlug(input.companyName, brands, brands.slug);
+  const slug = await makeUniqueSlug(input.firstName+"-"+input.lastName, brands, brands.slug);
 
   const brand = await brandRepo.insertBrand({
     email,
     firstName: input.firstName.trim(),
     lastName: input.lastName.trim(),
-    companyName: input.companyName.trim(),
+    // companyName: input.companyName.trim(),
     passwordHash,
     slug,
-    role: input.role,
-    requestType: input.requestType,
-    budgetRange: input.budgetRange,
-    timeline: input.timeline,
-    campaignGoal: input.campaignGoal,
-    campaignDescription: input.campaignDescription,
-    language: input.language,
+    // role: input.role,
+    // requestType: input.requestType,
+    // budgetRange: input.budgetRange,
+    // timeline: input.timeline,
+    // campaignGoal: input.campaignGoal,
+    // campaignDescription: input.campaignDescription,
+    // language: input.language,
     isEmailVerified: false,
     approvalStatus: "approved",
   });
 
-  if (input.categoryIds?.length) {
-    const taxonomyIds = await brandRepo.findTaxonomyIdsByExternalIds(
-      input.categoryIds
-    );
-    await brandRepo.insertTaxonomySelections(brand.id, taxonomyIds);
-    logger.info(
-      { brandId: brand.id, count: taxonomyIds.length },
-      "Taxonomy selections saved"
-    );
-  }
+  // if (input.categoryIds?.length) {
+  //   const taxonomyIds = await brandRepo.findTaxonomyIdsByExternalIds(
+  //     input.categoryIds
+  //   );
+  //   await brandRepo.insertTaxonomySelections(brand.id, taxonomyIds);
+  //   logger.info(
+  //     { brandId: brand.id, count: taxonomyIds.length },
+  //     "Taxonomy selections saved"
+  //   );
+  // }
 
   const otp = await otpRepo.createOtp(email, "email_verify", brand.id);
   await sendOtpEmail(input.email, otp, "email_verify");
@@ -327,7 +328,7 @@ export async function verifyEmailOtp(
       email: brand.email,
       firstName: brand.firstName,
       lastName: brand.lastName,
-      companyName: brand.companyName,
+      // companyName: brand.companyName,
       approvalStatus: brand.approvalStatus!,
     },
     accessToken,

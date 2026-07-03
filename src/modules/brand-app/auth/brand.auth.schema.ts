@@ -1,10 +1,10 @@
 import { z } from "zod";
-import {
-  ROLES,
-  REQUEST_TYPES,
-  TIMELINES,
-  BUDGET_RANGES,
-} from "../../../constants/brand.constants";
+// import {
+//   ROLES,
+//   REQUEST_TYPES,
+//   TIMELINES,
+//   BUDGET_RANGES,
+// } from "../../../constants/brand.constants";
 
 export const registerSchema = z.object({
   email: z.string().email(),
@@ -17,15 +17,15 @@ export const registerSchema = z.object({
     .regex(/[^A-Za-z0-9]/, "Must contain at least one special character"),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
-  companyName: z.string().min(1),
-  role: z.enum(ROLES).optional(),
-  requestType: z.enum(REQUEST_TYPES).optional(),
-  budgetRange: z.enum(BUDGET_RANGES).optional(),
-  timeline: z.enum(TIMELINES).optional(),
-  campaignGoal: z.string().optional(),
-  campaignDescription: z.string().optional(),
-  language: z.string().optional(),
-  categoryIds: z.array(z.number()).optional(),
+  // companyName: z.string().min(1),
+  // role: z.enum(ROLES).optional(),
+  // requestType: z.enum(REQUEST_TYPES).optional(),
+  // budgetRange: z.enum(BUDGET_RANGES).optional(),
+  // timeline: z.enum(TIMELINES).optional(),
+  // campaignGoal: z.string().optional(),
+  // campaignDescription: z.string().optional(),
+  // language: z.string().optional(),
+  // categoryIds: z.array(z.number()).optional(),
 });
 
 export const verifyEmailOtpSchema = z.object({

@@ -10,7 +10,8 @@ declare global {
       brand?: {
         id:             string;
         email:          string;
-        companyName:    string;
+        isOnboardingComplete:boolean | null;
+        // companyName:    string;
         approvalStatus: string;
       };
     }
@@ -38,7 +39,8 @@ export async function authenticate(
     req.brand = {
       id:             brand.id,
       email:          brand.email,
-      companyName:    brand.companyName,
+      isOnboardingComplete:brand.isOnboardingComplete,
+      // companyName:    brand.companyName,
       approvalStatus: brand.approvalStatus!,
     };
 

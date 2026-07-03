@@ -57,20 +57,20 @@ registry.registerPath({
               ),
             firstName: z.string().min(1),
             lastName: z.string().min(1),
-            companyName: z.string().min(1),
-            role: z.string().optional(),
-            requestType: z.string().optional(),
-            budgetRange: z.string().optional(),
-            timeline: z.string().optional(),
-            campaignGoal: z.string().optional(),
-            campaignDescription: z.string().optional(),
-            language: z.string().optional(),
-            categoryIds: z
-              .array(z.number())
-              .optional()
-              .describe(
-                "IG category externalIds — backend will auto-match YT categories + interests by title"
-              ),
+            // companyName: z.string().min(1),
+            // role: z.string().optional(),
+            // requestType: z.string().optional(),
+            // budgetRange: z.string().optional(),
+            // timeline: z.string().optional(),
+            // campaignGoal: z.string().optional(),
+            // campaignDescription: z.string().optional(),
+            // language: z.string().optional(),
+            // categoryIds: z
+            //   .array(z.number())
+            //   .optional()
+            //   .describe(
+            //     "IG category externalIds — backend will auto-match YT categories + interests by title"
+            //   ),
           }),
         },
       },

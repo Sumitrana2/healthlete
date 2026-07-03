@@ -31,7 +31,7 @@ export function createApp(): Application {
       credentials: true,
     })
   );
-  app.set("trust proxy", true);
+  // app.set("trust proxy", true);
   app.use(cookieParser());
   app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ extended: true }));

@@ -41,7 +41,7 @@ export interface LoginResult {
     email: string;
     firstName: string;
     lastName: string;
-    companyName: string;
+    // companyName: string;
     approvalStatus: string;
   };
   accessToken: string;

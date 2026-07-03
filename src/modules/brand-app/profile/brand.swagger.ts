@@ -9,7 +9,8 @@ const profileResponseSchema = successResponse(
   z.object({
     id: z.string().uuid(),
     email: z.string().email(),
-    companyName: z.string(),
+    isOnboardingComplete: z.boolean(),
+    // companyName: z.string(),
     approvalStatus: z.enum([
       "pending",
       "approved",

@@ -1,16 +1,11 @@
 import { registry } from "../../../../config/swagger";
 import { z } from "zod";
-import {
-  successResponse,
-  errorResponse,
-  paginationQuery,
-  paginationResponse,
-} from "../../../../utils/swaggerSchemas";
+import { successResponse, errorResponse } from "../../../../utils/swaggerSchemas";
 
 const industrySchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
-  slug: z.string(),
+//   slug: z.string(),
 }).nullable();
 
 // const companySizeSchema = z.object({
@@ -22,27 +17,21 @@ const companySchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
   website: z.string().nullable(),
-  // logoUrl: z.string().nullable(),
-  // country: z.string().nullable(),
-  // description: z.string().nullable(),
+//   logoUrl: z.string().nullable(),
+//   country: z.string().nullable(),
+//   description: z.string().nullable(),
   industry: industrySchema,
-  // companySize: companySizeSchema,
-});
-
-const companyListSchema = z.object({
-  data: z.array(companySchema),
-  ...paginationResponse.shape,
+//   companySize: companySizeSchema,
 });
 
 registry.registerPath({
   method: "get",
-  path: "/admin/lookup/company",
-  tags: ["Admin Lookup Data"],
-  summary: "Get all companies",
+  path: "/brand/company/search",
+  tags: ["Brand Onboarding"],
+  summary: "Search companies by name",
   request: {
     query: z.object({
-      search: z.string().optional().describe("Search by company name"),
-      ...paginationQuery.shape,
+      search: z.string().optional().describe("Company name to search"),
     }),
   },
   responses: {
@@ -51,15 +40,13 @@ registry.registerPath({
       content: {
         "application/json": {
           schema: successResponse(
-            z.object({
-              companies: companyListSchema,
-            })
+            z.object({ companies: z.array(companySchema) })
           ),
         },
       },
     },
-    500: {
-      description: "Internal server error",
+    400: {
+      description: "Validation error",
       content: { "application/json": { schema: errorResponse } },
     },
   },

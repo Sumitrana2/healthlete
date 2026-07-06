@@ -1,21 +1,26 @@
 import { Router } from "express";
-import * as campaignObjectivesService from "./admin.campaign-objective.service";
-
+import * as lookupService from "../../../core/lookup/lookup.service";
+import { toNumber } from "../../../../utils/pagination.util";
 const router = Router();
-router.get(
-  "/",
-  async (_req, res, next) => {
-    try {
-      const results = await campaignObjectivesService.getCampaignObjectives();
-      res.json({
-        success: true,
-        message: "Campaign objectives fetched successfully",
-        data: { campaignObjectives: results },
-      });
-    } catch (err) {
-      next(err);
-    }
+
+router.get("/", async (req, res, next) => {
+  try {
+    const { search, page = 1, limit = 10, isActive } = req.query;
+    const results = await lookupService.getCampaignObjectives({
+      search: search as string,
+      page: toNumber(page),
+      limit: toNumber(limit),
+      isActive: isActive !== undefined ? isActive === "true" : true,
+      fields: ["id", "name", "isActive", "createdAt", "updatedAt"],
+    });
+    res.json({
+      success: true,
+      message: "Campaign objectives fetched",
+      data: { campaignObjectives: results },
+    });
+  } catch (err) {
+    next(err);
   }
-);
+});
 
 export default router;

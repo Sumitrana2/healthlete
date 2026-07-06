@@ -13,3 +13,15 @@ export const errorResponse = z.object({
   code: z.string(),
   errors: z.record(z.array(z.string())).optional(),
 });
+
+export const paginationQuery = z.object({
+  page: z.string().optional().describe("Page number"),
+  limit: z.string().optional().describe("Items per page"),
+});
+
+export const paginationResponse = z.object({
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+  totalPages: z.number(),
+});

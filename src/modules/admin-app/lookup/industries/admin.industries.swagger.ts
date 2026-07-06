@@ -1,11 +1,23 @@
 import { registry } from "../../../../config/swagger";
 import { z } from "zod";
-import { successResponse, errorResponse } from "../../../../utils/swaggerSchemas";
+import {
+  successResponse,
+  errorResponse,
+  paginationQuery,
+  paginationResponse,
+} from "../../../../utils/swaggerSchemas";
 
 const industrySchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
-  // slug: z.string(),
+  isActive: z.boolean(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+
+const ListSchema = z.object({
+  data: z.array(industrySchema),
+  ...paginationResponse.shape,
 });
 
 registry.registerPath({
@@ -13,13 +25,22 @@ registry.registerPath({
   path: "/admin/lookup/industries",
   tags: ["Admin Lookup Data"],
   summary: "Get all active industries",
+  request: {
+    query: z.object({
+      search: z.string().optional().describe("Search by name"),
+      isActive: z.enum(["true", "false"]).optional().describe("Filter by status"),
+      ...paginationQuery.shape,
+    }),
+  },
   responses: {
     200: {
       description: "Industries fetched successfully",
       content: {
         "application/json": {
           schema: successResponse(
-            z.object({ industries: z.array(industrySchema) })
+            z.object({
+              industries: ListSchema,
+            })
           ),
         },
       },

@@ -6,18 +6,10 @@ import {
   paginationQuery,
   paginationResponse,
 } from "../../../../utils/swaggerSchemas";
+import { channelSchema, createChannelsSchema, updatePreferredChannelSchema } from "./admin.channels.schema";
 
-const channelSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string(),
-  isActive: z.boolean(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-});
 
-const createPreferredChannelSchema = z.object({
-  name: z.string().trim().min(2).max(150).describe("Preferred channel name"),
-});
+
 
 const ListSchema = z.object({
   item: z.array(channelSchema),
@@ -34,7 +26,7 @@ registry.registerPath({
       required: true,
       content: {
         "application/json": {
-          schema: createPreferredChannelSchema,
+          schema: createChannelsSchema,
         },
       },
     },
@@ -102,6 +94,68 @@ registry.registerPath({
     500: {
       description: "Internal server error",
       content: { "application/json": { schema: errorResponse } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "patch",
+  path: "/admin/lookup/channels/{id}",
+  tags: ["Admin Lookup Data"],
+  summary: "Update preferred channel",
+  request: {
+    params: z.object({
+      id: z.string().uuid().describe("Preferred Channel ID"),
+    }),
+    body: {
+      required: true,
+      content: {
+        "application/json": {
+          schema: updatePreferredChannelSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Preferred channel updated successfully",
+      content: {
+        "application/json": {
+          schema: successResponse(channelSchema),
+        },
+      },
+    },
+    400: {
+      description: "Validation error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    404: {
+      description: "Preferred channel not found",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    409: {
+      description: "Preferred channel already exists",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
     },
   },
 });

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import * as lookupService from "../../../core/lookup/lookup.service";
 import { toNumber } from "../../../../utils/pagination.util";
-import { createLanguageSchema } from "./admin.languages.schema";
+import { createLanguageSchema, updateLanguageSchema } from "./admin.languages.schema";
 import { validate } from "../../../../middleware/validate";
 
 const router = Router();
@@ -50,6 +50,32 @@ router.get(
         success: true,
         message: "Languages fetched successfully",
         data:  results,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.patch(
+  "/:id",
+  validate(updateLanguageSchema),
+  async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const { name, code } = req.body;
+
+      const language = await lookupService.updateAthleteLanguage(id, {
+        name,
+        code,
+      });
+
+      res.json({
+        success: true,
+        message: "Language updated successfully",
+        data: {
+          language,
+        },
       });
     } catch (err) {
       next(err);

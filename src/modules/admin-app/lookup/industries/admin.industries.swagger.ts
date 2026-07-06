@@ -6,23 +6,7 @@ import {
   paginationQuery,
   paginationResponse,
 } from "../../../../utils/swaggerSchemas";
-
-const createIndustryRequestSchema = z.object({
-  name: z
-    .string()
-    .min(2)
-    .max(100)
-    .describe("Industry name"),
-});
-
-const industrySchema = z.object({
-  id: z.string().uuid(),
-  name: z.string(),
-  slug: z.string(),
-  isActive: z.boolean(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-});
+import { createIndustrySchema, industrySchema, updateIndustrySchema } from "./admin.industries.schema";
 
 const ListSchema = z.object({
   item: z.array(industrySchema),
@@ -40,7 +24,7 @@ registry.registerPath({
       required: true,
       content: {
         "application/json": {
-          schema: createIndustryRequestSchema,
+          schema: createIndustrySchema,
         },
       },
     },
@@ -108,6 +92,68 @@ registry.registerPath({
     500: {
       description: "Internal server error",
       content: { "application/json": { schema: errorResponse } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "patch",
+  path: "/admin/lookup/industries/{id}",
+  tags: ["Admin Lookup Data"],
+  summary: "Update industry",
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+    body: {
+      required: true,
+      content: {
+        "application/json": {
+          schema: updateIndustrySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Industry updated successfully",
+      content: {
+        "application/json": {
+          schema: successResponse(industrySchema),
+        },
+      },
+    },
+    400: {
+      description: "Validation error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    404: {
+      description: "Industry not found",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    409: {
+      description: "Industry already exists",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
     },
   },
 });

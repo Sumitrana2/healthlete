@@ -6,25 +6,10 @@ import {
   paginationQuery,
   paginationResponse,
 } from "../../../../utils/swaggerSchemas";
+import { createLanguageSchema, languageSchema, updateLanguageSchema } from "./admin.languages.schema";
 
-const languageSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string(),
-  code: z.string(),
-  isActive: z.boolean(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-});
-const createLanguageSchema = z.object({
-  name: z.string().trim().min(2).max(100).describe("Language name"),
 
-  code: z
-    .string()
-    .trim()
-    .min(2)
-    .max(10)
-    .describe("Language code (e.g. EN, HI, FR)"),
-});
+
 
 const ListSchema = z.object({
   item: z.array(languageSchema),
@@ -109,6 +94,68 @@ registry.registerPath({
     500: {
       description: "Internal server error",
       content: { "application/json": { schema: errorResponse } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "patch",
+  path: "/admin/lookup/languages/{id}",
+  tags: ["Admin Lookup Data"],
+  summary: "Update athlete language",
+  request: {
+    params: z.object({
+      id: z.string().uuid().describe("Language ID"),
+    }),
+    body: {
+      required: true,
+      content: {
+        "application/json": {
+          schema: updateLanguageSchema, 
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Language updated successfully",
+      content: {
+        "application/json": {
+          schema: successResponse(languageSchema),
+        },
+      },
+    },
+    400: {
+      description: "Validation error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    404: {
+      description: "Language not found",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    409: {
+      description: "Language name or code already exists",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
     },
   },
 });

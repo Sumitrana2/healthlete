@@ -1,7 +1,7 @@
 import { Router } from "express";
 import * as lookupService from "../../../core/lookup/lookup.service";
 import { toNumber } from "../../../../utils/pagination.util";
-import { createHealthConditionSchema } from "./admin.health-condition.schema";
+import { createHealthConditionSchema, updateHealthConditionSchema } from "./admin.health-condition.schema";
 import { validate } from "../../../../middleware/validate";
 
 const router = Router();
@@ -52,4 +52,26 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+router.patch(
+  "/:id",
+  validate(updateHealthConditionSchema),
+  async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const { name } = req.body;
+
+      const result = await lookupService.updateHealthCondition(id, { name });
+
+      res.json({
+        success: true,
+        message: "Health condition updated successfully",
+        data: {
+          healthCondition: result,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 export default router;

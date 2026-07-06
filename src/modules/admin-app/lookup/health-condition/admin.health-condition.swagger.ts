@@ -6,23 +6,10 @@ import {
   paginationQuery,
   paginationResponse,
 } from "../../../../utils/swaggerSchemas";
+import { createHealthConditionSchema, healthConditionSchema, updateHealthConditionSchema } from "./admin.health-condition.schema";
 
-const createHealthConditionSchema = z.object({
-  name: z
-    .string()
-    .min(2)
-    .max(100)
-    .trim()
-    .describe("Health condition name"),
-});
 
-const healthConditionSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string(),
-  isActive: z.boolean(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-});
+
 
 
 const ListSchema = z.object({
@@ -108,6 +95,68 @@ registry.registerPath({
     500: {
       description: "Internal server error",
       content: { "application/json": { schema: errorResponse } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "patch",
+  path: "/admin/lookup/health-conditions/{id}",
+  tags: ["Admin Lookup Data"],
+  summary: "Update health condition",
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+    body: {
+      required: true,
+      content: {
+        "application/json": {
+          schema: updateHealthConditionSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Health condition updated successfully",
+      content: {
+        "application/json": {
+          schema: successResponse(healthConditionSchema),
+        },
+      },
+    },
+    400: {
+      description: "Validation error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    404: {
+      description: "Health condition not found",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    409: {
+      description: "Health condition already exists",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
     },
   },
 });

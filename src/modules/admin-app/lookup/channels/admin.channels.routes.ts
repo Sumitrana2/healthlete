@@ -2,7 +2,7 @@ import { Router } from "express";
 import * as lookupService from "../../../core/lookup/lookup.service";
 import { toNumber } from "../../../../utils/pagination.util";
 import { validate } from "../../../../middleware/validate";
-import { createChannelsSchema } from "./admin.channels.schema";
+import { createChannelsSchema, updatePreferredChannelSchema } from "./admin.channels.schema";
 
 const router = Router();
 
@@ -41,6 +41,31 @@ router.get(
         success: true,
         message: "Channels fetched successfully",
         data: results ,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.patch(
+  "/:id",
+  validate(updatePreferredChannelSchema),
+  async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const { name } = req.body;
+
+      const channel = await lookupService.updatePreferredChannel(id, {
+        name,
+      });
+
+      res.json({
+        success: true,
+        message: "Preferred channel updated successfully",
+        data: {
+          preferredChannel: channel,
+        },
       });
     } catch (err) {
       next(err);

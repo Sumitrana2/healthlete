@@ -1,4 +1,4 @@
-import { and, count, eq, ilike, sql } from "drizzle-orm";
+import { and, count, desc, eq, ilike, sql } from "drizzle-orm";
 import { db } from "../../../db";
 import type { LookupFilters } from "./lookup.types";
 import { AppError } from "../../../middleware/errorHandler";
@@ -42,7 +42,9 @@ export async function getLookupData(
   const query = db
     .select(buildSelectedFields(fieldMap, filters.fields))
     .from(table)
-    .where(conditions.length ? and(...conditions) : undefined);
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(desc(table.createdAt));
+
 
   if (filters.page && filters.limit) {
     query.limit(filters.limit).offset((filters.page - 1) * filters.limit);
@@ -65,7 +67,6 @@ export async function getLookupCount(
   return Number(result.count);
 }
 
-
 export async function createLookupItem(
   name: string,
   findByName: (name: string) => Promise<any>,
@@ -77,11 +78,7 @@ export async function createLookupItem(
   const existing = await findByName(trimmedName);
 
   if (existing) {
-    throw new AppError(
-      409,
-      `${entityName} already exists`,
-      "ALREADY_EXIST"
-    );
+    throw new AppError(409, `${entityName} already exists`, "ALREADY_EXIST");
   }
 
   return create({ name: trimmedName });
@@ -104,9 +101,65 @@ export async function createLookup(
   table: PgTableWithColumns<any>,
   data: { name: string }
 ) {
+  const [result] = await db.insert(table).values(data).returning();
+
+  return result;
+}
+
+export async function updateLookupItem(
+  id: string,
+  name: string,
+  findById: (id: string) => Promise<any>,
+  findByName: (name: string) => Promise<any>,
+  update: (id: string, data: { name: string }) => Promise<any>,
+  entityName: string
+) {
+  const existing = await findById(id);
+
+  if (!existing) {
+    throw new AppError(404, `${entityName} not found`, "NOT_FOUND");
+  }
+  const trimmedName = name.trim();
+  const duplicate = await findByName(trimmedName);
+
+  if (duplicate && duplicate.id !== id) {
+    throw new AppError(409, `${entityName} already exists`, "ALREADY_EXIST");
+  }
+
+  return update(id, {
+    name: trimmedName,
+  });
+}
+
+export async function findLookupById(
+  table: any,
+  idColumn: any,
+  id: string
+) {
   const [result] = await db
-    .insert(table)
-    .values(data)
+    .select()
+    .from(table)
+    .where(eq(idColumn, id));
+
+  return result;
+}
+
+export async function updateLookup<
+  TTable extends PgTableWithColumns<any>,
+  TData extends Record<string, unknown>
+>(
+  table: TTable,
+  idColumn: TTable["_"]["columns"]["id"],
+  id: string,
+  data: TData
+) {
+  const [result] = await db
+    .update(table)
+    .set({
+      ...data,
+      updatedAt: new Date(),
+    })
+    .where(eq(idColumn, id))
     .returning();
 
   return result;

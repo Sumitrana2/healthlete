@@ -11,9 +11,11 @@ import {
 import { ilike, eq, and, or, sql } from "drizzle-orm";
 import type { CompanyField, LookupFilters } from "./lookup.types";
 import {
+  findLookupById,
   findLookupByName,
   getLookupCount,
   getLookupData,
+  updateLookup,
 } from "./lookup.repository.utils";
 import { makeUniqueSlug } from "../../../utils/slug";
 const DEFAULT_COMPANY_SIZE_ID = "0b30cff8-0b53-4676-8fe1-6dbd82c629ad";
@@ -96,6 +98,13 @@ export async function createHealthCondition(data: { name: string }) {
   const [result] = await db.insert(healthConditions).values(data).returning();
   return result;
 }
+
+export const findHealthConditionById = (id: string) =>
+  findLookupById(healthConditions, healthConditions.id, id);
+
+export const updateHealthCondition = (id: string, data: { name: string }) =>
+  updateLookup(healthConditions, healthConditions.id, id, data);
+
 // ─── Preferred Channels ───────────────────────────────────────────────────────
 
 export const getPreferredChannels = (filters: LookupFilters = {}) =>
@@ -109,6 +118,11 @@ export const findPreferredChannelByName = (name: string) =>
 
 export const createPreferredChannel = (data: { name: string }) =>
   db.insert(preferredChannels).values(data).returning();
+export const findPreferredChannelById = (id: string) =>
+  findLookupById(preferredChannels, preferredChannels.id, id);
+
+export const updatePreferredChannel = (id: string, data: { name: string }) =>
+  updateLookup(preferredChannels, preferredChannels.id, id, data);
 
 // ─── Athlete Languages ────────────────────────────────────────────────────────
 export const getAthleteLanguages = (filters: LookupFilters = {}) =>
@@ -138,6 +152,27 @@ export async function createLanguage(data: { name: string; code: string }) {
   return result;
 }
 
+export const findAthleteLanguageById = (id: string) =>
+  findLookupById(athleteLanguages, athleteLanguages.id, id);
+export async function updateAthleteLanguage(
+  id: string,
+  data: {
+    name: string;
+    code: string;
+  }
+) {
+  const [language] = await db
+    .update(athleteLanguages)
+    .set({
+      ...data,
+      updatedAt: new Date(),
+    })
+    .where(eq(athleteLanguages.id, id))
+    .returning();
+
+  return language;
+}
+
 // ─── Industries ───────────────────────────────────────────────────────────────
 export const getIndustries = (filters: LookupFilters = {}) =>
   getLookupData(industries, industriesFieldMap, filters);
@@ -156,6 +191,21 @@ export async function createIndustry(data: { name: string }) {
       ...data,
       slug,
     })
+    .returning();
+
+  return result;
+}
+export async function updateIndustry(id: string, data: { name: string }) {
+  const slug = await makeUniqueSlug(data.name, industries, industries.slug);
+
+  const [result] = await db
+    .update(industries)
+    .set({
+      name: data.name,
+      slug,
+      updatedAt: new Date(),
+    })
+    .where(eq(industries.id, id))
     .returning();
 
   return result;

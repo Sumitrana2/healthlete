@@ -15,9 +15,64 @@ const channelSchema = z.object({
   updatedAt: z.string().datetime(),
 });
 
+const createPreferredChannelSchema = z.object({
+  name: z.string().trim().min(2).max(150).describe("Preferred channel name"),
+});
+
 const ListSchema = z.object({
-  data: z.array(channelSchema),
+  item: z.array(channelSchema),
   ...paginationResponse.shape,
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/admin/lookup/channels",
+  tags: ["Admin Lookup Data"],
+  summary: "Create preferred channel",
+  request: {
+    body: {
+      required: true,
+      content: {
+        "application/json": {
+          schema: createPreferredChannelSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: "Preferred channel created successfully",
+      content: {
+        "application/json": {
+          schema: successResponse(channelSchema),
+        },
+      },
+    },
+    400: {
+      description: "Validation error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    409: {
+      description: "Preferred channel already exists",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+  },
 });
 
 registry.registerPath({
@@ -28,7 +83,10 @@ registry.registerPath({
   request: {
     query: z.object({
       search: z.string().optional().describe("Search by name"),
-      isActive: z.enum(["true", "false"]).optional().describe("Filter by status"),
+      isActive: z
+        .enum(["true", "false"])
+        .optional()
+        .describe("Filter by status"),
       ...paginationQuery.shape,
     }),
   },
@@ -37,11 +95,7 @@ registry.registerPath({
       description: "Channels fetched successfully",
       content: {
         "application/json": {
-          schema: successResponse(
-            z.object({
-              channels: ListSchema,
-            })
-          ),
+          schema: successResponse(ListSchema),
         },
       },
     },

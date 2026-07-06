@@ -24,7 +24,7 @@ export async function paginate<T>(
   const [data, total] = await Promise.all([getData(f), getCount(f)]);
 
   return {
-    data,
+    item: data,
     total,
     page: f.page,
     limit: f.limit,

@@ -8,12 +8,15 @@ import {
   companies,
   companySizes,
 } from "../../../db/schema";
-import { ilike, eq, and } from "drizzle-orm";
-import type {
-  CompanyField,
-  LookupFilters,
-} from "./lookup.types";
-import { getLookupCount, getLookupData } from "./lookup.repository.utils";
+import { ilike, eq, and, or, sql } from "drizzle-orm";
+import type { CompanyField, LookupFilters } from "./lookup.types";
+import {
+  findLookupByName,
+  getLookupCount,
+  getLookupData,
+} from "./lookup.repository.utils";
+import { makeUniqueSlug } from "../../../utils/slug";
+const DEFAULT_COMPANY_SIZE_ID = "0b30cff8-0b53-4676-8fe1-6dbd82c629ad";
 
 const campaignObjectiveFieldMap = {
   id: campaignObjectives.id,
@@ -65,11 +68,18 @@ const languageFieldMap = {
   updatedAt: athleteLanguages.updatedAt,
 };
 
+// campaign
 export const getCampaignObjectives = (filters: LookupFilters = {}) =>
   getLookupData(campaignObjectives, campaignObjectiveFieldMap, filters);
 
 export const getCampaignObjectivesCount = (filters: LookupFilters = {}) =>
   getLookupCount(campaignObjectives, filters);
+
+export const findCampaignObjectiveByName = (name: string) =>
+  findLookupByName(campaignObjectives, campaignObjectives.name, name);
+
+export const createCampaignObjective = (data: { name: string }) =>
+  db.insert(campaignObjectives).values(data).returning();
 
 // ─── Health Conditions ────────────────────────────────────────────────────────
 
@@ -79,6 +89,13 @@ export const getHealthConditions = (filters: LookupFilters = {}) =>
 export const getHealthConditionsCount = (filters: LookupFilters = {}) =>
   getLookupCount(healthConditions, filters);
 
+export const findHealthConditionByName = (name: string) =>
+  findLookupByName(healthConditions, healthConditions.name, name);
+
+export async function createHealthCondition(data: { name: string }) {
+  const [result] = await db.insert(healthConditions).values(data).returning();
+  return result;
+}
 // ─── Preferred Channels ───────────────────────────────────────────────────────
 
 export const getPreferredChannels = (filters: LookupFilters = {}) =>
@@ -87,12 +104,39 @@ export const getPreferredChannels = (filters: LookupFilters = {}) =>
 export const getPreferredChannelsCount = (filters: LookupFilters = {}) =>
   getLookupCount(preferredChannels, filters);
 
+export const findPreferredChannelByName = (name: string) =>
+  findLookupByName(preferredChannels, preferredChannels.name, name);
+
+export const createPreferredChannel = (data: { name: string }) =>
+  db.insert(preferredChannels).values(data).returning();
+
 // ─── Athlete Languages ────────────────────────────────────────────────────────
 export const getAthleteLanguages = (filters: LookupFilters = {}) =>
   getLookupData(athleteLanguages, languageFieldMap, filters);
 
 export const getAthleteLanguagesCount = (filters: LookupFilters = {}) =>
   getLookupCount(athleteLanguages, filters);
+
+export async function findLanguageByName(name: string) {
+  const [language] = await db
+    .select()
+    .from(athleteLanguages)
+    .where(sql`LOWER(${athleteLanguages.name}) = LOWER(${name})`);
+  return language;
+}
+export async function findLanguageByCode(code: string) {
+  const [language] = await db
+    .select()
+    .from(athleteLanguages)
+    .where(sql`LOWER(${athleteLanguages.code}) = LOWER(${code})`);
+  return language;
+}
+
+export async function createLanguage(data: { name: string; code: string }) {
+  const [result] = await db.insert(athleteLanguages).values(data).returning();
+
+  return result;
+}
 
 // ─── Industries ───────────────────────────────────────────────────────────────
 export const getIndustries = (filters: LookupFilters = {}) =>
@@ -101,13 +145,27 @@ export const getIndustries = (filters: LookupFilters = {}) =>
 export const getIndustriesCount = (filters: LookupFilters = {}) =>
   getLookupCount(industries, filters);
 
+export const findIndustryByName = (name: string) =>
+  findLookupByName(industries, industries.name, name);
+
+export async function createIndustry(data: { name: string }) {
+  const slug = await makeUniqueSlug(data.name, industries, industries.slug);
+  const [result] = await db
+    .insert(industries)
+    .values({
+      ...data,
+      slug,
+    })
+    .returning();
+
+  return result;
+}
+
+// company
 export async function getCompanies(filters: LookupFilters = {}) {
   const selectedFields = filters.fields
     ? Object.fromEntries(
-        (filters.fields as CompanyField[]).map((f) => [
-          f,
-          companyFieldMap[f],
-        ])
+        (filters.fields as CompanyField[]).map((f) => [f, companyFieldMap[f]])
       )
     : {
         id: companyFieldMap.id,
@@ -152,3 +210,37 @@ export async function getCompanies(filters: LookupFilters = {}) {
 
 export const getCompaniesCount = (filters: LookupFilters = {}) =>
   getLookupCount(companies, filters);
+
+export const findCompanyByName = (name: string) =>
+  findLookupByName(companies, companies.name, name);
+
+export async function findIndustryById(id: string) {
+  const [industry] = await db
+    .select()
+    .from(industries)
+    .where(eq(industries.id, id));
+
+  return industry;
+}
+
+export async function createCompany(data: {
+  name: string;
+  website: string | null;
+  industryId: string;
+}) {
+  const [company] = await db
+    .insert(companies)
+    .values({
+      name: data.name,
+      website: data.website,
+      industryId: data.industryId,
+      companySizeId: DEFAULT_COMPANY_SIZE_ID,
+
+      logoUrl: null,
+      country: null,
+      description: null,
+    })
+    .returning();
+
+  return company;
+}

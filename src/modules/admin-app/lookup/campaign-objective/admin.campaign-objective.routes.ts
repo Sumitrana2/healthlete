@@ -1,7 +1,28 @@
 import { Router } from "express";
 import * as lookupService from "../../../core/lookup/lookup.service";
 import { toNumber } from "../../../../utils/pagination.util";
+import { createCampaignObjectiveSchema } from "./admin.campaign-objective.schema";
+import { validate } from "../../../../middleware/validate";
 const router = Router();
+
+
+router.post(
+  "/",
+  validate(createCampaignObjectiveSchema),
+  async (req, res, next) => {
+    try {
+      const { name } = req.body;
+      const result = await lookupService.createCampaignObjective({ name });
+      res.status(201).json({
+        success: true,
+        message: "Campaign objective created successfully",
+        data: { industry: result },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 router.get("/", async (req, res, next) => {
   try {
@@ -16,7 +37,7 @@ router.get("/", async (req, res, next) => {
     res.json({
       success: true,
       message: "Campaign objectives fetched",
-      data: { campaignObjectives: results },
+      data:  results,
     });
   } catch (err) {
     next(err);

@@ -1,8 +1,34 @@
 import { Router } from "express";
 import * as lookupService from "../../../core/lookup/lookup.service";
 import { toNumber } from "../../../../utils/pagination.util";
+import { validate } from "../../../../middleware/validate";
+import { createCompanySchema } from "./admin.company.schema";
 
 const router = Router();
+
+router.post(
+  "/",
+  validate(createCompanySchema),
+  async (req, res, next) => {
+    try {
+      const { name, website, industryId } = req.body;
+
+      const company = await lookupService.createCompany({
+        name,
+        website,
+        industryId,
+      });
+
+      res.status(201).json({
+        success: true,
+        message: "Company created successfully",
+        data: { company },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 router.get("/", async (req, res, next) => {
   try {
@@ -21,7 +47,7 @@ router.get("/", async (req, res, next) => {
     res.json({
       success: true,
       message: "Companies fetched successfully",
-      data: { companies: results },
+      data:  results ,
     });
   } catch (err) {
     next(err);

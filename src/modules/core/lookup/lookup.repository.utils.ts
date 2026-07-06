@@ -1,6 +1,8 @@
-import { and, count, eq, ilike } from "drizzle-orm";
+import { and, count, eq, ilike, sql } from "drizzle-orm";
 import { db } from "../../../db";
 import type { LookupFilters } from "./lookup.types";
+import { AppError } from "../../../middleware/errorHandler";
+import { PgTableWithColumns } from "drizzle-orm/pg-core";
 
 export function buildConditions(table: any, filters: LookupFilters) {
   const conditions = [];
@@ -61,4 +63,51 @@ export async function getLookupCount(
     .where(conditions.length ? and(...conditions) : undefined);
 
   return Number(result.count);
+}
+
+
+export async function createLookupItem(
+  name: string,
+  findByName: (name: string) => Promise<any>,
+  create: (data: { name: string }) => Promise<any>,
+  entityName: string
+) {
+  const trimmedName = name.trim();
+
+  const existing = await findByName(trimmedName);
+
+  if (existing) {
+    throw new AppError(
+      409,
+      `${entityName} already exists`,
+      "ALREADY_EXIST"
+    );
+  }
+
+  return create({ name: trimmedName });
+}
+
+export async function findLookupByName(
+  table: any,
+  nameColumn: any,
+  name: string
+) {
+  const [result] = await db
+    .select()
+    .from(table)
+    .where(sql`LOWER(${nameColumn}) = LOWER(${name.trim()})`);
+
+  return result;
+}
+
+export async function createLookup(
+  table: PgTableWithColumns<any>,
+  data: { name: string }
+) {
+  const [result] = await db
+    .insert(table)
+    .values(data)
+    .returning();
+
+  return result;
 }

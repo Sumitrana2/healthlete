@@ -1,8 +1,28 @@
 import { Router } from "express";
 import * as lookupService from "../../../core/lookup/lookup.service";
 import { toNumber } from "../../../../utils/pagination.util";
+import { createHealthConditionSchema } from "./admin.health-condition.schema";
+import { validate } from "../../../../middleware/validate";
 
 const router = Router();
+
+router.post(
+  "/",
+  validate(createHealthConditionSchema),
+  async (req, res, next) => {
+    try {
+      const { name } = req.body;
+      const result = await lookupService.createHealthCondition({ name });
+      res.status(201).json({
+        success: true,
+        message: "Health condition created successfully",
+        data: { industry: result },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 router.get("/", async (req, res, next) => {
   try {
@@ -25,7 +45,7 @@ router.get("/", async (req, res, next) => {
     res.json({
       success: true,
       message: "Health conditions fetched successfully",
-      data: { healthConditions: results },
+      data:  results ,
     });
   } catch (err) {
     next(err);

@@ -7,11 +7,34 @@ import {
   paginationResponse,
 } from "../../../../utils/swaggerSchemas";
 
-const industrySchema = z.object({
-  id: z.string().uuid(),
-  name: z.string(),
-  slug: z.string(),
-}).nullable();
+const industrySchema = z
+  .object({
+    id: z.string().uuid(),
+    name: z.string(),
+    slug: z.string(),
+  })
+  .nullable();
+
+
+  const createCompanySchema = z.object({
+    name: z
+      .string()
+      .min(2)
+      .max(150)
+      .trim()
+      .describe("Company name"),
+  
+    website: z
+      .string()
+      .url()
+      .optional()
+      .describe("Company website"),
+  
+    industryId: z
+      .string()
+      .uuid()
+      .describe("Industry ID"),
+  });  
 
 // const companySizeSchema = z.object({
 //   id: z.string().uuid(),
@@ -30,9 +53,69 @@ const companySchema = z.object({
 });
 
 const companyListSchema = z.object({
-  data: z.array(companySchema),
+  item: z.array(companySchema),
   ...paginationResponse.shape,
 });
+
+registry.registerPath({
+  method: "post",
+  path: "/admin/lookup/company",
+  tags: ["Admin Lookup Data"],
+  summary: "Create company",
+  request: {
+    body: {
+      required: true,
+      content: {
+        "application/json": {
+          schema: createCompanySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: "Company created successfully",
+      content: {
+        "application/json": {
+          schema: successResponse(companySchema),
+        },
+      },
+    },
+    400: {
+      description: "Validation error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    404: {
+      description: "Industry not found",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    409: {
+      description: "Company already exists",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+  },
+});
+
 
 registry.registerPath({
   method: "get",
@@ -50,11 +133,7 @@ registry.registerPath({
       description: "Companies fetched successfully",
       content: {
         "application/json": {
-          schema: successResponse(
-            z.object({
-              companies: companyListSchema,
-            })
-          ),
+          schema: successResponse(companyListSchema),
         },
       },
     },

@@ -7,18 +7,80 @@ import {
   paginationResponse,
 } from "../../../../utils/swaggerSchemas";
 
+const createIndustryRequestSchema = z.object({
+  name: z
+    .string()
+    .min(2)
+    .max(100)
+    .describe("Industry name"),
+});
+
 const industrySchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
+  slug: z.string(),
   isActive: z.boolean(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });
 
 const ListSchema = z.object({
-  data: z.array(industrySchema),
+  item: z.array(industrySchema),
   ...paginationResponse.shape,
 });
+
+
+registry.registerPath({
+  method: "post",
+  path: "/admin/lookup/industries",
+  tags: ["Admin Lookup Data"],
+  summary: "Create industry",
+  request: {
+    body: {
+      required: true,
+      content: {
+        "application/json": {
+          schema: createIndustryRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: "Industry created successfully",
+      content: {
+        "application/json": {
+          schema: successResponse(industrySchema),
+        },
+      },
+    },
+    400: {
+      description: "Validation error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    409: {
+      description: "Industry already exists",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+  },
+});
+
 
 registry.registerPath({
   method: "get",
@@ -38,9 +100,7 @@ registry.registerPath({
       content: {
         "application/json": {
           schema: successResponse(
-            z.object({
-              industries: ListSchema,
-            })
+              ListSchema,
           ),
         },
       },

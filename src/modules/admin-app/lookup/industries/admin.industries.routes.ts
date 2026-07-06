@@ -1,8 +1,27 @@
 import { Router } from "express";
 import * as lookupService from "../../../core/lookup/lookup.service";
 import { toNumber } from "../../../../utils/pagination.util";
-
+import { createIndustrySchema } from "./admin.industries.schema";
+import { validate } from "../../../../middleware/validate";
 const router = Router();
+
+router.post(
+  "/",
+  validate(createIndustrySchema),
+  async (req, res, next) => {
+    try {
+      const { name } = req.body;
+      const result = await lookupService.createIndustry({ name });
+      res.status(201).json({
+        success: true,
+        message: "Industry created successfully",
+        data: { industry: result },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 router.get("/", async (req, res, next) => {
   try {
@@ -25,7 +44,7 @@ router.get("/", async (req, res, next) => {
     res.json({
       success: true,
       message: "Industries fetched successfully",
-      data: { industries: results },
+      data:   results ,
     });
   } catch (err) {
     next(err);

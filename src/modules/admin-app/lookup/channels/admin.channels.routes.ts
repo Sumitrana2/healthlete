@@ -1,8 +1,30 @@
 import { Router } from "express";
 import * as lookupService from "../../../core/lookup/lookup.service";
 import { toNumber } from "../../../../utils/pagination.util";
+import { validate } from "../../../../middleware/validate";
+import { createChannelsSchema } from "./admin.channels.schema";
 
 const router = Router();
+
+router.post(
+  "/",
+  validate(createChannelsSchema),
+  async (req, res, next) => {
+    try {
+      const { name } = req.body;
+      const result = await lookupService.createPreferredChannel({ name });
+      res.status(201).json({
+        success: true,
+        message: "Preferred channel created successfully",
+        data: { industry: result },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+
 router.get(
   "/",
   async (req, res, next) => {
@@ -18,7 +40,7 @@ router.get(
       res.json({
         success: true,
         message: "Channels fetched successfully",
-        data: { channels: results },
+        data: results ,
       });
     } catch (err) {
       next(err);

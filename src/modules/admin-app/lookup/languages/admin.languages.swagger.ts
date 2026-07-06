@@ -15,11 +15,71 @@ const languageSchema = z.object({
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });
+const createLanguageSchema = z.object({
+  name: z.string().trim().min(2).max(100).describe("Language name"),
 
+  code: z
+    .string()
+    .trim()
+    .min(2)
+    .max(10)
+    .describe("Language code (e.g. EN, HI, FR)"),
+});
 
 const ListSchema = z.object({
-  data: z.array(languageSchema),
+  item: z.array(languageSchema),
   ...paginationResponse.shape,
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/admin/lookup/languages",
+  tags: ["Admin Lookup Data"],
+  summary: "Create athlete language",
+  request: {
+    body: {
+      required: true,
+      content: {
+        "application/json": {
+          schema: createLanguageSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: "Language created successfully",
+      content: {
+        "application/json": {
+          schema: successResponse(languageSchema),
+        },
+      },
+    },
+    400: {
+      description: "Validation error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    409: {
+      description: "Language already exists",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+  },
 });
 
 registry.registerPath({
@@ -42,11 +102,7 @@ registry.registerPath({
       description: "Languages fetched successfully",
       content: {
         "application/json": {
-          schema: successResponse(
-            z.object({
-              languages: ListSchema,
-            })
-          ),
+          schema: successResponse(ListSchema),
         },
       },
     },

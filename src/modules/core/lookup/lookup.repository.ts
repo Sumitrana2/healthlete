@@ -8,7 +8,7 @@ import {
   companies,
   companySizes,
 } from "../../../db/schema";
-import { ilike, eq, and,  sql, desc } from "drizzle-orm";
+import { ilike, eq, and, sql, desc } from "drizzle-orm";
 import type { CompanyField, LookupFilters } from "./lookup.types";
 import {
   deleteLookup,
@@ -43,6 +43,7 @@ const companyFieldMap = {
   website: companies.website,
   logoUrl: companies.logoUrl,
   country: companies.country,
+  isActive: companies.isActive,
   description: companies.description,
 };
 
@@ -87,8 +88,14 @@ export const createCampaignObjective = (data: { name: string }) =>
 export const findCampaignObjectiveById = (id: string) =>
   findLookupById(campaignObjectives, campaignObjectives.id, id);
 
-export const updateCampaignObjective = (id: string, data: { name: string }) =>
-  updateLookup(campaignObjectives, campaignObjectives.id, id, data);
+export const updateCampaignObjective = (
+  id: string,
+  data: Partial<{
+    name: string;
+    isActive: boolean;
+  }>
+) => updateLookup(campaignObjectives, campaignObjectives.id, id, data);
+
 export const deleteCampaignObjective = (id: string) =>
   deleteLookup(campaignObjectives, campaignObjectives.id, id);
 
@@ -111,12 +118,18 @@ export async function createHealthCondition(data: { name: string }) {
 export const findHealthConditionById = (id: string) =>
   findLookupById(healthConditions, healthConditions.id, id);
 
-export const updateHealthCondition = (id: string, data: { name: string }) =>
-  updateLookup(healthConditions, healthConditions.id, id, data);
+export const updateHealthCondition = (
+  id: string,
+  data: Partial<{
+    name: string;
+    isActive: boolean;
+  }>
+) => updateLookup(healthConditions, healthConditions.id, id, data);
 
 export async function deleteHealthCondition(id: string) {
-    return deleteLookup(healthConditions, healthConditions.id, id);
+  return deleteLookup(healthConditions, healthConditions.id, id);
 }
+
 // ─── Preferred Channels ───────────────────────────────────────────────────────
 
 export const getPreferredChannels = (filters: LookupFilters = {}) =>
@@ -133,11 +146,17 @@ export const createPreferredChannel = (data: { name: string }) =>
 export const findPreferredChannelById = (id: string) =>
   findLookupById(preferredChannels, preferredChannels.id, id);
 
-export const updatePreferredChannel = (id: string, data: { name: string }) =>
-  updateLookup(preferredChannels, preferredChannels.id, id, data);
+export const updatePreferredChannel = (
+  id: string,
+  data: Partial<{
+    name: string;
+    isActive: boolean;
+  }>
+) => updateLookup(preferredChannels, preferredChannels.id, id, data);
 
 export const deletePreferredChannel = (id: string) =>
   deleteLookup(preferredChannels, preferredChannels.id, id);
+
 // ─── Athlete Languages ────────────────────────────────────────────────────────
 export const getAthleteLanguages = (filters: LookupFilters = {}) =>
   getLookupData(athleteLanguages, languageFieldMap, filters);
@@ -170,10 +189,11 @@ export const findAthleteLanguageById = (id: string) =>
   findLookupById(athleteLanguages, athleteLanguages.id, id);
 export async function updateAthleteLanguage(
   id: string,
-  data: {
+  data: Partial<{
     name: string;
     code: string;
-  }
+    isActive: boolean;
+  }>
 ) {
   const [language] = await db
     .update(athleteLanguages)
@@ -187,11 +207,8 @@ export async function updateAthleteLanguage(
   return language;
 }
 export const deleteAthleteLanguage = (id: string) =>
-  deleteLookup(
-    athleteLanguages,
-    athleteLanguages.id,
-    id
-  );
+  deleteLookup(athleteLanguages, athleteLanguages.id, id);
+
 // ─── Industries ───────────────────────────────────────────────────────────────
 
 export async function findIndustryById(id: string) {
@@ -224,14 +241,24 @@ export async function createIndustry(data: { name: string }) {
 
   return result;
 }
-export async function updateIndustry(id: string, data: { name: string }) {
-  const slug = await makeUniqueSlug(data.name, industries, industries.slug);
+export async function updateIndustry(
+  id: string,
+  data: Partial<{
+    name: string;
+    isActive: boolean;
+  }>
+) {
+  let slug: string | undefined;
+
+  if (data.name) {
+    slug = await makeUniqueSlug(data.name, industries, industries.slug);
+  }
 
   const [result] = await db
     .update(industries)
     .set({
-      name: data.name,
-      slug,
+      ...data,
+      ...(slug && { slug }),
       updatedAt: new Date(),
     })
     .where(eq(industries.id, id))
@@ -240,13 +267,10 @@ export async function updateIndustry(id: string, data: { name: string }) {
   return result;
 }
 export const deleteIndustry = (id: string) =>
-  deleteLookup(
-    industries,
-    industries.id,
-    id
-  );
+  deleteLookup(industries, industries.id, id);
 
 // company
+
 export async function getCompanies(filters: LookupFilters = {}) {
   const selectedFields = filters.fields
     ? Object.fromEntries(
@@ -260,10 +284,15 @@ export async function getCompanies(filters: LookupFilters = {}) {
   const withIndustry = filters.includeIndustry !== false;
   const withCompanySize = filters.includeCompanySize !== false;
 
-  const conditions = filters.search
-    ? [ilike(companies.name, `%${filters.search}%`)]
-    : [];
+  const conditions = [];
 
+  if (filters.search?.trim()) {
+    conditions.push(ilike(companies.name, `%${filters.search.trim()}%`));
+  }
+
+  if (filters.isActive !== undefined) {
+    conditions.push(eq(companies.isActive, filters.isActive));
+  }
   const baseQuery = db
     .select({
       ...selectedFields,
@@ -326,18 +355,17 @@ export async function createCompany(data: {
 
 export async function updateCompany(
   id: string,
-  data: {
+  data: Partial<{
     name: string;
-    website?: string;
+    website: string;
     industryId: string;
-  }
+    isActive: boolean;
+  }>
 ) {
   const [result] = await db
     .update(companies)
     .set({
-      name: data.name,
-      website: data.website,
-      industryId: data.industryId,
+      ...data,
       updatedAt: new Date(),
     })
     .where(eq(companies.id, id))
@@ -347,8 +375,4 @@ export async function updateCompany(
 }
 
 export const deleteCompany = (id: string) =>
-  deleteLookup(
-    companies,
-    companies.id,
-    id
-  );
+  deleteLookup(companies, companies.id, id);

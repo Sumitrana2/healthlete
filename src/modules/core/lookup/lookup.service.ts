@@ -1,5 +1,5 @@
 import * as repo from "./lookup.repository";
-import type { LookupFilters } from "./lookup.types";
+import type { LookupFilters, LookupUpdateDto } from "./lookup.types";
 import { paginate } from "../../../utils/pagination.util";
 import {
   createLookupItem,
@@ -9,6 +9,7 @@ import {
 import { AppError } from "../../../middleware/errorHandler";
 
 // ─── Campaign Objectives ──────────────────────────────────────────────────────
+
 export async function getCampaignObjectives(filters: LookupFilters = {}) {
   return paginate(
     filters,
@@ -16,6 +17,7 @@ export async function getCampaignObjectives(filters: LookupFilters = {}) {
     repo.getCampaignObjectivesCount
   );
 }
+
 export const createCampaignObjective = (data: { name: string }) =>
   createLookupItem(
     data.name,
@@ -23,15 +25,32 @@ export const createCampaignObjective = (data: { name: string }) =>
     repo.createCampaignObjective,
     "Campaign Objective"
   );
-export const updateCampaignObjective = (id: string, data: { name: string }) =>
+
+// export const updateCampaignObjective = (id: string, data: { name: string }) =>
+//   updateLookupItem(
+//     id,
+//     data.name,
+//     repo.findCampaignObjectiveById,
+//     repo.findCampaignObjectiveByName,
+//     repo.updateCampaignObjective,
+//     "Campaign Objective"
+//   );
+export const updateCampaignObjective = (
+  id: string,
+  data: Partial<{
+    name: string;
+    isActive: boolean;
+  }>
+) =>
   updateLookupItem(
     id,
-    data.name,
+    data,
     repo.findCampaignObjectiveById,
     repo.findCampaignObjectiveByName,
     repo.updateCampaignObjective,
     "Campaign Objective"
   );
+
 export const deleteCampaignObjective = (id: string) =>
   deleteLookupItem(
     id,
@@ -58,10 +77,16 @@ export const createHealthCondition = (data: { name: string }) =>
     "Health Condition"
   );
 
-export const updateHealthCondition = (id: string, data: { name: string }) =>
+export const updateHealthCondition = (
+  id: string,
+  data: Partial<{
+    name: string;
+    isActive: boolean;
+  }>
+) =>
   updateLookupItem(
     id,
-    data.name,
+    data,
     repo.findHealthConditionById,
     repo.findHealthConditionByName,
     repo.updateHealthCondition,
@@ -75,6 +100,7 @@ export const deleteHealthCondition = (id: string) =>
     repo.deleteHealthCondition,
     "Health Condition"
   );
+
 // ─── Preferred Channels ───────────────────────────────────────────────────────
 
 export async function getPreferredChannels(filters: LookupFilters = {}) {
@@ -92,10 +118,16 @@ export const createPreferredChannel = (data: { name: string }) =>
     repo.createPreferredChannel,
     "Preferred Channel"
   );
-export const updatePreferredChannel = (id: string, data: { name: string }) =>
+export const updatePreferredChannel = (
+  id: string,
+  data: Partial<{
+    name: string;
+    isActive: boolean;
+  }>
+) =>
   updateLookupItem(
     id,
-    data.name,
+    data,
     repo.findPreferredChannelById,
     repo.findPreferredChannelByName,
     repo.updatePreferredChannel,
@@ -108,6 +140,7 @@ export const deletePreferredChannel = (id: string) =>
     repo.deletePreferredChannel,
     "Preferred Channel"
   );
+
 // ─── Athlete Languages ────────────────────────────────────────────────────────
 
 export async function getAthleteLanguages(filters: LookupFilters = {}) {
@@ -134,10 +167,11 @@ export async function createLanguage(data: { name: string; code: string }) {
 }
 export async function updateAthleteLanguage(
   id: string,
-  data: {
+  data: Partial<{
     name: string;
     code: string;
-  }
+    isActive: boolean;
+  }>
 ) {
   const language = await repo.findAthleteLanguageById(id);
 
@@ -145,25 +179,41 @@ export async function updateAthleteLanguage(
     throw new AppError(404, "Language not found", "NOT_FOUND");
   }
 
-  const name = data.name.trim();
-  const code = data.code.trim().toUpperCase();
+  const updateData: Partial<{
+    name: string;
+    code: string;
+    isActive: boolean;
+  }> = {};
 
-  const duplicateName = await repo.findLanguageByName(name);
+  if (data.name !== undefined) {
+    const name = data.name.trim();
 
-  if (duplicateName && duplicateName.id !== id) {
-    throw new AppError(409, "Language already exists", "ALREADY_EXIST");
+    const duplicateName = await repo.findLanguageByName(name);
+
+    if (duplicateName && duplicateName.id !== id) {
+      throw new AppError(409, "Language already exists", "ALREADY_EXIST");
+    }
+
+    updateData.name = name;
   }
 
-  const duplicateCode = await repo.findLanguageByCode(code);
+  if (data.code !== undefined) {
+    const code = data.code.trim().toUpperCase();
 
-  if (duplicateCode && duplicateCode.id !== id) {
-    throw new AppError(409, "Language code already exists", "ALREADY_EXIST");
+    const duplicateCode = await repo.findLanguageByCode(code);
+
+    if (duplicateCode && duplicateCode.id !== id) {
+      throw new AppError(409, "Language code already exists", "ALREADY_EXIST");
+    }
+
+    updateData.code = code;
   }
 
-  return repo.updateAthleteLanguage(id, {
-    name,
-    code,
-  });
+  if (data.isActive !== undefined) {
+    updateData.isActive = data.isActive;
+  }
+
+  return repo.updateAthleteLanguage(id, updateData);
 }
 export const deleteAthleteLanguage = (id: string) =>
   deleteLookupItem(
@@ -172,6 +222,7 @@ export const deleteAthleteLanguage = (id: string) =>
     repo.deleteAthleteLanguage,
     "Language"
   );
+
 // ─── Industries ───────────────────────────────────────────────────────────────
 
 export async function getIndustries(filters: LookupFilters = {}) {
@@ -186,10 +237,16 @@ export const createIndustry = (data: { name: string }) =>
     "Industry"
   );
 
-export const updateIndustry = (id: string, data: { name: string }) =>
+export const updateIndustry = (
+  id: string,
+  data: Partial<{
+    name: string;
+    isActive: boolean;
+  }>
+) =>
   updateLookupItem(
     id,
-    data.name,
+    data,
     repo.findIndustryById,
     repo.findIndustryByName,
     repo.updateIndustry,
@@ -200,9 +257,11 @@ export const deleteIndustry = (id: string) =>
   deleteLookupItem(id, repo.findIndustryById, repo.deleteIndustry, "Industry");
 
 // ─── Company ───────────────────────────────────────────────────────────
+
 export async function getCompanies(filters: LookupFilters = {}) {
   return paginate(filters, repo.getCompanies, repo.getCompaniesCount);
 }
+
 export async function createCompany(data: {
   name: string;
   website?: string;
@@ -231,25 +290,39 @@ export async function createCompany(data: {
 
 export async function updateCompany(
   id: string,
-  data: {
+  data: Partial<{
     name: string;
     website: string;
     industryId: string;
-  }
+    isActive: boolean;
+  }>
 ) {
   const company = await repo.findCompanyById(id);
 
   if (!company) {
     throw new AppError(404, "Company not found", "NOT_FOUND");
   }
-  const existing = await repo.findCompanyByName(data.name);
-  if (existing && existing.id !== id) {
-    throw new AppError(409, "Company already exists", "ALREADY_EXIST");
+
+  if (data.name !== undefined) {
+    const name = data.name.trim();
+
+    const existing = await repo.findCompanyByName(name);
+
+    if (existing && existing.id !== id) {
+      throw new AppError(409, "Company already exists", "ALREADY_EXIST");
+    }
+
+    data.name = name;
   }
-  const industry = await repo.findIndustryById(data.industryId);
-  if (!industry) {
-    throw new AppError(404, "Industry not found", "NOT_FOUND");
+
+  if (data.industryId !== undefined) {
+    const industry = await repo.findIndustryById(data.industryId);
+
+    if (!industry) {
+      throw new AppError(404, "Industry not found", "NOT_FOUND");
+    }
   }
+
   return repo.updateCompany(id, data);
 }
 export const deleteCompany = (id: string) =>

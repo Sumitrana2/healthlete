@@ -72,7 +72,7 @@ export const companies = pgTable(
     logoUrl: varchar("logo_url", { length: 500 }),
     description: text("description"),
     country: varchar("country", { length: 100 }),
-
+    isActive: boolean("is_active").default(true),
     industryId: uuid("industry_id").references(() => industries.id, {
       onDelete: "set null",
     }),

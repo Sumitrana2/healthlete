@@ -34,7 +34,7 @@ router.get(
         search: search as string,
         page: toNumber(page),
         limit: toNumber(limit),
-        isActive: isActive !== undefined ? isActive === "true" : true,
+        isActive: isActive !== undefined ? isActive === "true" : undefined,
         fields: ["id", "name", "isActive", "createdAt", "updatedAt"],
       });
       res.json({
@@ -56,9 +56,10 @@ router.patch(
       const { id } = req.params;
       const { name } = req.body;
 
-      const channel = await lookupService.updatePreferredChannel(id, {
-        name,
-      });
+      const channel = await lookupService.updatePreferredChannel(
+        req.params.id,
+        req.body
+      );
 
       res.json({
         success: true,

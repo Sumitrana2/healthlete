@@ -11,6 +11,7 @@ router.get(
       const { search} = req.query;
       const results = await lookupService.getCompanies({
         search: search as string,
+        isActive: true,
         fields: ["id", "name", "website"],
         includeIndustry: true,
         includeCompanySize: false,

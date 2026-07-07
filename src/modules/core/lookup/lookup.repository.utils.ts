@@ -1,6 +1,6 @@
 import { and, count, desc, eq, ilike, sql } from "drizzle-orm";
 import { db } from "../../../db";
-import type { LookupFilters } from "./lookup.types";
+import type { LookupFilters, LookupUpdateDto } from "./lookup.types";
 import { AppError } from "../../../middleware/errorHandler";
 import { PgTableWithColumns } from "drizzle-orm/pg-core";
 
@@ -10,7 +10,6 @@ export function buildConditions(table: any, filters: LookupFilters) {
   if (filters.isActive !== undefined) {
     conditions.push(eq(table.isActive, filters.isActive));
   }
-
   if (filters.search?.trim()) {
     conditions.push(ilike(table.name, `%${filters.search.trim()}%`));
   }
@@ -29,6 +28,7 @@ export function buildSelectedFields(
     };
   }
 
+
   return Object.fromEntries(fields.map((field) => [field, fieldMap[field]]));
 }
 
@@ -44,7 +44,6 @@ export async function getLookupData(
     .from(table)
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(desc(table.createdAt));
-
 
   if (filters.page && filters.limit) {
     query.limit(filters.limit).offset((filters.page - 1) * filters.limit);
@@ -108,10 +107,10 @@ export async function createLookup(
 
 export async function updateLookupItem(
   id: string,
-  name: string,
+  data: LookupUpdateDto,
   findById: (id: string) => Promise<any>,
   findByName: (name: string) => Promise<any>,
-  update: (id: string, data: { name: string }) => Promise<any>,
+  update: (id: string, data: LookupUpdateDto) => Promise<any>,
   entityName: string
 ) {
   const existing = await findById(id);
@@ -119,27 +118,24 @@ export async function updateLookupItem(
   if (!existing) {
     throw new AppError(404, `${entityName} not found`, "NOT_FOUND");
   }
-  const trimmedName = name.trim();
-  const duplicate = await findByName(trimmedName);
 
-  if (duplicate && duplicate.id !== id) {
-    throw new AppError(409, `${entityName} already exists`, "ALREADY_EXIST");
+  if (data.name !== undefined) {
+    const trimmedName = data.name.trim();
+
+    const duplicate = await findByName(trimmedName);
+
+    if (duplicate && duplicate.id !== id) {
+      throw new AppError(409, `${entityName} already exists`, "ALREADY_EXIST");
+    }
+
+    data.name = trimmedName;
   }
 
-  return update(id, {
-    name: trimmedName,
-  });
+  return update(id, data);
 }
 
-export async function findLookupById(
-  table: any,
-  idColumn: any,
-  id: string
-) {
-  const [result] = await db
-    .select()
-    .from(table)
-    .where(eq(idColumn, id));
+export async function findLookupById(table: any, idColumn: any, id: string) {
+  const [result] = await db.select().from(table).where(eq(idColumn, id));
 
   return result;
 }
@@ -176,8 +172,6 @@ export async function deleteLookupItem(
   if (!item) {
     throw new AppError(404, `${entityName} not found`, "NOT_FOUND");
   }
-
-  // Future Enhancement:
   // const linked = await hasReference(id);
   // if (linked) {
   //   throw new AppError(
@@ -195,11 +189,7 @@ export async function deleteLookup(
   idColumn: any,
   id: string
 ) {
-  const [result] = await db
-    .delete(table)
-    .where(eq(idColumn, id))
-    .returning();
+  const [result] = await db.delete(table).where(eq(idColumn, id)).returning();
 
   return result;
 }
-

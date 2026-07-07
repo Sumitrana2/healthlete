@@ -1,10 +1,12 @@
 import { Router } from "express";
 import * as lookupService from "../../../core/lookup/lookup.service";
 import { toNumber } from "../../../../utils/pagination.util";
-import { createCampaignObjectiveSchema, updateCampaignObjectiveSchema } from "./admin.campaign-objective.schema";
+import {
+  createCampaignObjectiveSchema,
+  updateCampaignObjectiveSchema,
+} from "./admin.campaign-objective.schema";
 import { validate } from "../../../../middleware/validate";
 const router = Router();
-
 
 router.post(
   "/",
@@ -31,13 +33,13 @@ router.get("/", async (req, res, next) => {
       search: search as string,
       page: toNumber(page),
       limit: toNumber(limit),
-      isActive: isActive !== undefined ? isActive === "true" : true,
+      isActive: isActive !== undefined ? isActive === "true" : undefined,
       fields: ["id", "name", "isActive", "createdAt", "updatedAt"],
     });
     res.json({
       success: true,
       message: "Campaign objectives fetched",
-      data:  results,
+      data: results,
     });
   } catch (err) {
     next(err);

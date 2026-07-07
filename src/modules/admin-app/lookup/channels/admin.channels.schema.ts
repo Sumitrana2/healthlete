@@ -4,8 +4,14 @@ export const createChannelsSchema = z.object({
   name: z.string().min(1).max(150),
 });
 
-
-export const updatePreferredChannelSchema =createChannelsSchema
+export const updatePreferredChannelSchema = z
+  .object({
+    name: z.string().min(1).max(150).optional(),
+    isActive: z.boolean().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "At least one field is required",
+  });
 
 export const channelSchema = z.object({
   id: z.string().uuid(),

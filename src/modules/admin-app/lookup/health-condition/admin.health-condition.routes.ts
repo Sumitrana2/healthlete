@@ -32,7 +32,7 @@ router.get("/", async (req, res, next) => {
       search: search as string,
       page: toNumber(page),
       limit: toNumber(limit),
-      isActive: isActive !== undefined ? isActive === "true" : true,
+      isActive: isActive !== undefined ? isActive === "true" : undefined,
       fields: [
         "id",
         "name",
@@ -57,11 +57,10 @@ router.patch(
   validate(updateHealthConditionSchema),
   async (req, res, next) => {
     try {
-      const { id } = req.params;
-      const { name } = req.body;
-
-      const result = await lookupService.updateHealthCondition(id, { name });
-
+      const result = await lookupService.updateHealthCondition(
+        req.params.id,
+        req.body
+      );
       res.json({
         success: true,
         message: "Health condition updated successfully",

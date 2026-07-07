@@ -38,8 +38,8 @@ router.get("/", async (req, res, next) => {
       search: search as string,
       page: toNumber(page),
       limit: toNumber(limit),
-      // isActive: isActive !== undefined ? isActive === "true" : true,
-      fields: ["id", "name", "website"],
+      isActive: isActive !== undefined ? isActive === "true" : undefined,
+      fields: ["id", "name", "website","isActive"],
       includeIndustry: true,
       includeCompanySize: false,
     });

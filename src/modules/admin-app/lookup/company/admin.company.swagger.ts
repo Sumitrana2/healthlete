@@ -80,6 +80,7 @@ registry.registerPath({
   request: {
     query: z.object({
       search: z.string().optional().describe("Search by company name"),
+      isActive: z.enum(["true", "false"]).optional().describe("Filter by status"),
       ...paginationQuery.shape,
     }),
   },

@@ -15,6 +15,7 @@ export type CompanyField =
   | "name"
   | "website"
   | "logoUrl"
+  | "isActive"
   | "country"
   | "description";
 
@@ -58,4 +59,9 @@ export interface LookupFilters<T extends string = string> {
   fields?: T[];
   includeIndustry?: boolean;
   includeCompanySize?: boolean;
+}
+
+export interface LookupUpdateDto {
+  name?: string;
+  isActive?: boolean;
 }

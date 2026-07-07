@@ -8,9 +8,10 @@ import {
   companies,
   companySizes,
 } from "../../../db/schema";
-import { ilike, eq, and, or, sql } from "drizzle-orm";
+import { ilike, eq, and,  sql, desc } from "drizzle-orm";
 import type { CompanyField, LookupFilters } from "./lookup.types";
 import {
+  deleteLookup,
   findLookupById,
   findLookupByName,
   getLookupCount,
@@ -83,6 +84,14 @@ export const findCampaignObjectiveByName = (name: string) =>
 export const createCampaignObjective = (data: { name: string }) =>
   db.insert(campaignObjectives).values(data).returning();
 
+export const findCampaignObjectiveById = (id: string) =>
+  findLookupById(campaignObjectives, campaignObjectives.id, id);
+
+export const updateCampaignObjective = (id: string, data: { name: string }) =>
+  updateLookup(campaignObjectives, campaignObjectives.id, id, data);
+export const deleteCampaignObjective = (id: string) =>
+  deleteLookup(campaignObjectives, campaignObjectives.id, id);
+
 // ─── Health Conditions ────────────────────────────────────────────────────────
 
 export const getHealthConditions = (filters: LookupFilters = {}) =>
@@ -105,6 +114,9 @@ export const findHealthConditionById = (id: string) =>
 export const updateHealthCondition = (id: string, data: { name: string }) =>
   updateLookup(healthConditions, healthConditions.id, id, data);
 
+export async function deleteHealthCondition(id: string) {
+    return deleteLookup(healthConditions, healthConditions.id, id);
+}
 // ─── Preferred Channels ───────────────────────────────────────────────────────
 
 export const getPreferredChannels = (filters: LookupFilters = {}) =>
@@ -124,6 +136,8 @@ export const findPreferredChannelById = (id: string) =>
 export const updatePreferredChannel = (id: string, data: { name: string }) =>
   updateLookup(preferredChannels, preferredChannels.id, id, data);
 
+export const deletePreferredChannel = (id: string) =>
+  deleteLookup(preferredChannels, preferredChannels.id, id);
 // ─── Athlete Languages ────────────────────────────────────────────────────────
 export const getAthleteLanguages = (filters: LookupFilters = {}) =>
   getLookupData(athleteLanguages, languageFieldMap, filters);
@@ -172,8 +186,23 @@ export async function updateAthleteLanguage(
 
   return language;
 }
-
+export const deleteAthleteLanguage = (id: string) =>
+  deleteLookup(
+    athleteLanguages,
+    athleteLanguages.id,
+    id
+  );
 // ─── Industries ───────────────────────────────────────────────────────────────
+
+export async function findIndustryById(id: string) {
+  const [industry] = await db
+    .select()
+    .from(industries)
+    .where(eq(industries.id, id));
+
+  return industry;
+}
+
 export const getIndustries = (filters: LookupFilters = {}) =>
   getLookupData(industries, industriesFieldMap, filters);
 
@@ -210,6 +239,12 @@ export async function updateIndustry(id: string, data: { name: string }) {
 
   return result;
 }
+export const deleteIndustry = (id: string) =>
+  deleteLookup(
+    industries,
+    industries.id,
+    id
+  );
 
 // company
 export async function getCompanies(filters: LookupFilters = {}) {
@@ -249,8 +284,8 @@ export async function getCompanies(filters: LookupFilters = {}) {
     .from(companies)
     .leftJoin(industries, eq(companies.industryId, industries.id))
     .leftJoin(companySizes, eq(companies.companySizeId, companySizes.id))
-    .where(conditions.length ? and(...conditions) : undefined);
-
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(desc(companies.createdAt));
   if (filters.page && filters.limit) {
     baseQuery.limit(filters.limit).offset((filters.page - 1) * filters.limit);
   }
@@ -264,14 +299,8 @@ export const getCompaniesCount = (filters: LookupFilters = {}) =>
 export const findCompanyByName = (name: string) =>
   findLookupByName(companies, companies.name, name);
 
-export async function findIndustryById(id: string) {
-  const [industry] = await db
-    .select()
-    .from(industries)
-    .where(eq(industries.id, id));
-
-  return industry;
-}
+export const findCompanyById = (id: string) =>
+  findLookupById(companies, companies.id, id);
 
 export async function createCompany(data: {
   name: string;
@@ -294,3 +323,32 @@ export async function createCompany(data: {
 
   return company;
 }
+
+export async function updateCompany(
+  id: string,
+  data: {
+    name: string;
+    website?: string;
+    industryId: string;
+  }
+) {
+  const [result] = await db
+    .update(companies)
+    .set({
+      name: data.name,
+      website: data.website,
+      industryId: data.industryId,
+      updatedAt: new Date(),
+    })
+    .where(eq(companies.id, id))
+    .returning();
+
+  return result;
+}
+
+export const deleteCompany = (id: string) =>
+  deleteLookup(
+    companies,
+    companies.id,
+    id
+  );

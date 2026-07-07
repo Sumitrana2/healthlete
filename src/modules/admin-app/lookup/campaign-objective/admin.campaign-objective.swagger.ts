@@ -6,24 +6,12 @@ import {
   paginationQuery,
   paginationResponse,
 } from "../../../../utils/swaggerSchemas";
-
-const campaignObjectiveSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string(),
-  isActive: z.boolean(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-});
-
-const createCampaignObjectiveSchema = z.object({
-  name: z.string().trim().min(2).max(150).describe("Campaign objective name"),
-});
+import { campaignObjectiveSchema, createCampaignObjectiveSchema, updateCampaignObjectiveSchema } from "./admin.campaign-objective.schema";
 
 const ListSchema = z.object({
   item: z.array(campaignObjectiveSchema),
   ...paginationResponse.shape,
 });
-
 
 registry.registerPath({
   method: "post",
@@ -76,7 +64,6 @@ registry.registerPath({
   },
 });
 
-
 registry.registerPath({
   method: "get",
   path: "/admin/lookup/campaign-objectives",
@@ -104,6 +91,97 @@ registry.registerPath({
     500: {
       description: "Internal server error",
       content: { "application/json": { schema: errorResponse } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "patch",
+  path: "/admin/lookup/campaign-objectives/{id}",
+  tags: ["Admin Lookup Data"],
+  summary: "Update campaign objective",
+
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+
+    body: {
+      required: true,
+      content: {
+        "application/json": {
+          schema: updateCampaignObjectiveSchema,
+        },
+      },
+    },
+  },
+
+  responses: {
+    200: {
+      description: "Campaign objective updated successfully",
+      content: {
+        "application/json": {
+          schema: successResponse(campaignObjectiveSchema),
+        },
+      },
+    },
+    404: {
+      description: "Campaign objective not found",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    409: {
+      description: "Campaign objective already exists",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "delete",
+  path: "/admin/lookup/campaign-objectives/{id}",
+  tags: ["Admin Lookup Data"],
+  summary: "Delete campaign objective",
+
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+  },
+
+  responses: {
+    200: {
+      description: "Campaign objective deleted successfully",
+      content: {
+        "application/json": {
+          schema: successResponse(campaignObjectiveSchema),
+        },
+      },
+    },
+
+    404: {
+      description: "Campaign objective not found",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
     },
   },
 });

@@ -72,4 +72,18 @@ router.patch(
     }
   }
 );
+
+router.delete("/:id", async (req, res, next) => {
+  try {
+    const result = await lookupService.deletePreferredChannel(req.params.id);
+
+    res.json({
+      success: true,
+      message: "Preferred channel deleted successfully",
+      data: result,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 export default router;

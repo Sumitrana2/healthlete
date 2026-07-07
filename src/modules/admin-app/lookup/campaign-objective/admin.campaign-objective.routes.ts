@@ -1,7 +1,7 @@
 import { Router } from "express";
 import * as lookupService from "../../../core/lookup/lookup.service";
 import { toNumber } from "../../../../utils/pagination.util";
-import { createCampaignObjectiveSchema } from "./admin.campaign-objective.schema";
+import { createCampaignObjectiveSchema, updateCampaignObjectiveSchema } from "./admin.campaign-objective.schema";
 import { validate } from "../../../../middleware/validate";
 const router = Router();
 
@@ -44,4 +44,38 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+router.patch(
+  "/:id",
+  validate(updateCampaignObjectiveSchema),
+  async (req, res, next) => {
+    try {
+      const result = await lookupService.updateCampaignObjective(
+        req.params.id,
+        req.body
+      );
+
+      res.json({
+        success: true,
+        message: "Campaign objective updated successfully",
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.delete("/:id", async (req, res, next) => {
+  try {
+    const result = await lookupService.deleteCampaignObjective(req.params.id);
+
+    res.json({
+      success: true,
+      message: "Campaign objective deleted successfully",
+      data: result,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 export default router;

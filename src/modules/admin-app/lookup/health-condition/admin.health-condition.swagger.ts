@@ -160,3 +160,41 @@ registry.registerPath({
     },
   },
 });
+
+registry.registerPath({
+  method: "delete",
+  path: "/admin/lookup/health-conditions/{id}",
+  tags: ["Admin Lookup Data"],
+  summary: "Delete health condition",
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Deleted successfully",
+      content: {
+        "application/json": {
+          schema: successResponse(healthConditionSchema),
+        },
+      },
+    },
+    404: {
+      description: "Not found",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    409: {
+      description: "Entity is in use",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+  },
+});

@@ -157,3 +157,45 @@ registry.registerPath({
     },
   },
 });
+
+registry.registerPath({
+  method: "delete",
+  path: "/admin/lookup/industries/{id}",
+  tags: ["Admin Lookup Data"],
+  summary: "Delete industry",
+
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+  },
+
+  responses: {
+    200: {
+      description: "Industry deleted successfully",
+      content: {
+        "application/json": {
+          schema: successResponse(industrySchema),
+        },
+      },
+    },
+
+    404: {
+      description: "Industry not found",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+  },
+});

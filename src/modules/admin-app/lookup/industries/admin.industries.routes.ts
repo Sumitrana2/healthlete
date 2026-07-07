@@ -74,4 +74,18 @@ router.patch(
   }
 );
 
+router.delete("/:id", async (req, res, next) => {
+  try {
+    const result = await lookupService.deleteIndustry(req.params.id);
+
+    res.json({
+      success: true,
+      message: "Industry deleted successfully",
+      data: result,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

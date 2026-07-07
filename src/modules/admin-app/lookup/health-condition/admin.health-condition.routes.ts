@@ -74,4 +74,18 @@ router.patch(
     }
   }
 );
+
+router.delete("/:id", async (req, res, next) => {
+  try {
+    const result = await lookupService.deleteHealthCondition(req.params.id);
+
+    res.json({
+      success: true,
+      message: "Health condition deleted successfully",
+      data: result,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 export default router;

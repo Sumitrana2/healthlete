@@ -164,3 +164,42 @@ export async function updateLookup<
 
   return result;
 }
+
+export async function deleteLookupItem(
+  id: string,
+  findById: (id: string) => Promise<any>,
+  remove: (id: string) => Promise<any>,
+  entityName: string
+) {
+  const item = await findById(id);
+
+  if (!item) {
+    throw new AppError(404, `${entityName} not found`, "NOT_FOUND");
+  }
+
+  // Future Enhancement:
+  // const linked = await hasReference(id);
+  // if (linked) {
+  //   throw new AppError(
+  //     409,
+  //     `${entityName} is in use and cannot be deleted`,
+  //     "ALREADY_IN_USE"
+  //   );
+  // }
+
+  return remove(id);
+}
+
+export async function deleteLookup(
+  table: PgTableWithColumns<any>,
+  idColumn: any,
+  id: string
+) {
+  const [result] = await db
+    .delete(table)
+    .where(eq(idColumn, id))
+    .returning();
+
+  return result;
+}
+

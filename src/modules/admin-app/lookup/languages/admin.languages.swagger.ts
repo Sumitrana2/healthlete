@@ -6,10 +6,11 @@ import {
   paginationQuery,
   paginationResponse,
 } from "../../../../utils/swaggerSchemas";
-import { createLanguageSchema, languageSchema, updateLanguageSchema } from "./admin.languages.schema";
-
-
-
+import {
+  createLanguageSchema,
+  languageSchema,
+  updateLanguageSchema,
+} from "./admin.languages.schema";
 
 const ListSchema = z.object({
   item: z.array(languageSchema),
@@ -111,7 +112,7 @@ registry.registerPath({
       required: true,
       content: {
         "application/json": {
-          schema: updateLanguageSchema, 
+          schema: updateLanguageSchema,
         },
       },
     },
@@ -149,6 +150,48 @@ registry.registerPath({
         },
       },
     },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "delete",
+  path: "/admin/lookup/languages/{id}",
+  tags: ["Admin Lookup Data"],
+  summary: "Delete athlete language",
+
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+  },
+
+  responses: {
+    200: {
+      description: "Language deleted successfully",
+      content: {
+        "application/json": {
+          schema: successResponse(languageSchema),
+        },
+      },
+    },
+
+    404: {
+      description: "Language not found",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+
     500: {
       description: "Internal server error",
       content: {

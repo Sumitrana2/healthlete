@@ -159,3 +159,45 @@ registry.registerPath({
     },
   },
 });
+
+registry.registerPath({
+  method: "delete",
+  path: "/admin/lookup/channels/{id}",
+  tags: ["Admin Lookup Data"],
+  summary: "Delete preferred channel",
+
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+  },
+
+  responses: {
+    200: {
+      description: "Preferred channel deleted successfully",
+      content: {
+        "application/json": {
+          schema: successResponse(channelSchema),
+        },
+      },
+    },
+
+    404: {
+      description: "Preferred channel not found",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+  },
+});

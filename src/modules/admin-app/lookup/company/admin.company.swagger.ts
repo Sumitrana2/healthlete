@@ -6,51 +6,7 @@ import {
   paginationQuery,
   paginationResponse,
 } from "../../../../utils/swaggerSchemas";
-
-const industrySchema = z
-  .object({
-    id: z.string().uuid(),
-    name: z.string(),
-    slug: z.string(),
-  })
-  .nullable();
-
-
-  const createCompanySchema = z.object({
-    name: z
-      .string()
-      .min(2)
-      .max(150)
-      .trim()
-      .describe("Company name"),
-  
-    website: z
-      .string()
-      .url()
-      .optional()
-      .describe("Company website"),
-  
-    industryId: z
-      .string()
-      .uuid()
-      .describe("Industry ID"),
-  });  
-
-// const companySizeSchema = z.object({
-//   id: z.string().uuid(),
-//   label: z.string(),
-// }).nullable();
-
-const companySchema = z.object({
-  id: z.string().uuid(),
-  name: z.string(),
-  website: z.string().nullable(),
-  // logoUrl: z.string().nullable(),
-  // country: z.string().nullable(),
-  // description: z.string().nullable(),
-  industry: industrySchema,
-  // companySize: companySizeSchema,
-});
+import { companySchema, createCompanySchema, updateCompanySchema } from "./admin.company.schema";
 
 const companyListSchema = z.object({
   item: z.array(companySchema),
@@ -116,7 +72,6 @@ registry.registerPath({
   },
 });
 
-
 registry.registerPath({
   method: "get",
   path: "/admin/lookup/company",
@@ -140,6 +95,110 @@ registry.registerPath({
     500: {
       description: "Internal server error",
       content: { "application/json": { schema: errorResponse } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "patch",
+  path: "/admin/lookup/company/{id}",
+  tags: ["Admin Lookup Data"],
+  summary: "Update company",
+  request: {
+    params: z.object({
+      id: z.string().uuid().describe("Company ID"),
+    }),
+    body: {
+      required: true,
+      content: {
+        "application/json": {
+          schema: updateCompanySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Company updated successfully",
+      content: {
+        "application/json": {
+          schema: successResponse(companySchema),
+        },
+      },
+    },
+    400: {
+      description: "Validation error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    404: {
+      description: "Company or Industry not found",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    409: {
+      description: "Company already exists",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "delete",
+  path: "/admin/lookup/company/{id}",
+  tags: ["Admin Lookup Data"],
+  summary: "Delete company",
+
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+  },
+
+  responses: {
+    200: {
+      description: "Company deleted successfully",
+      content: {
+        "application/json": {
+          schema: successResponse(companySchema),
+        },
+      },
+    },
+
+    404: {
+      description: "Company not found",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
+    },
+
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: errorResponse,
+        },
+      },
     },
   },
 });

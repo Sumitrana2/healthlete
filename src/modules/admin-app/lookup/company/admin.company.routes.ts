@@ -2,7 +2,7 @@ import { Router } from "express";
 import * as lookupService from "../../../core/lookup/lookup.service";
 import { toNumber } from "../../../../utils/pagination.util";
 import { validate } from "../../../../middleware/validate";
-import { createCompanySchema } from "./admin.company.schema";
+import { createCompanySchema, updateCompanySchema } from "./admin.company.schema";
 
 const router = Router();
 
@@ -54,4 +54,38 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+router.patch(
+  "/:id",
+  validate(updateCompanySchema),
+  async (req, res, next) => {
+    try {
+      const result = await lookupService.updateCompany(
+        req.params.id,
+        req.body
+      );
+
+      res.json({
+        success: true,
+        message: "Company updated successfully",
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.delete("/:id", async (req, res, next) => {
+  try {
+    const result = await lookupService.deleteCompany(req.params.id);
+
+    res.json({
+      success: true,
+      message: "Company deleted successfully",
+      data: result,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 export default router;

@@ -82,4 +82,21 @@ router.patch(
     }
   }
 );
+
+
+
+router.delete("/:id", async (req, res, next) => {
+  try {
+    const result = await lookupService.deleteAthleteLanguage(req.params.id);
+
+    res.json({
+      success: true,
+      message: "Language deleted successfully",
+      data: result,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

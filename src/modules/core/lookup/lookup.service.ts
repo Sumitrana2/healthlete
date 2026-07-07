@@ -1,7 +1,11 @@
 import * as repo from "./lookup.repository";
 import type { LookupFilters } from "./lookup.types";
 import { paginate } from "../../../utils/pagination.util";
-import { createLookupItem, updateLookupItem } from "./lookup.repository.utils";
+import {
+  createLookupItem,
+  deleteLookupItem,
+  updateLookupItem,
+} from "./lookup.repository.utils";
 import { AppError } from "../../../middleware/errorHandler";
 
 // ─── Campaign Objectives ──────────────────────────────────────────────────────
@@ -12,12 +16,27 @@ export async function getCampaignObjectives(filters: LookupFilters = {}) {
     repo.getCampaignObjectivesCount
   );
 }
-
 export const createCampaignObjective = (data: { name: string }) =>
   createLookupItem(
     data.name,
     repo.findCampaignObjectiveByName,
     repo.createCampaignObjective,
+    "Campaign Objective"
+  );
+export const updateCampaignObjective = (id: string, data: { name: string }) =>
+  updateLookupItem(
+    id,
+    data.name,
+    repo.findCampaignObjectiveById,
+    repo.findCampaignObjectiveByName,
+    repo.updateCampaignObjective,
+    "Campaign Objective"
+  );
+export const deleteCampaignObjective = (id: string) =>
+  deleteLookupItem(
+    id,
+    repo.findCampaignObjectiveById,
+    repo.deleteCampaignObjective,
     "Campaign Objective"
   );
 
@@ -48,6 +67,14 @@ export const updateHealthCondition = (id: string, data: { name: string }) =>
     repo.updateHealthCondition,
     "Health Condition"
   );
+
+export const deleteHealthCondition = (id: string) =>
+  deleteLookupItem(
+    id,
+    repo.findHealthConditionById,
+    repo.deleteHealthCondition,
+    "Health Condition"
+  );
 // ─── Preferred Channels ───────────────────────────────────────────────────────
 
 export async function getPreferredChannels(filters: LookupFilters = {}) {
@@ -65,18 +92,22 @@ export const createPreferredChannel = (data: { name: string }) =>
     repo.createPreferredChannel,
     "Preferred Channel"
   );
-  export const updatePreferredChannel = (
-    id: string,
-    data: { name: string }
-  ) =>
-    updateLookupItem(
-      id,
-      data.name,
-      repo.findPreferredChannelById,
-      repo.findPreferredChannelByName,
-      repo.updatePreferredChannel,
-      "Preferred Channel"
-    );
+export const updatePreferredChannel = (id: string, data: { name: string }) =>
+  updateLookupItem(
+    id,
+    data.name,
+    repo.findPreferredChannelById,
+    repo.findPreferredChannelByName,
+    repo.updatePreferredChannel,
+    "Preferred Channel"
+  );
+export const deletePreferredChannel = (id: string) =>
+  deleteLookupItem(
+    id,
+    repo.findPreferredChannelById,
+    repo.deletePreferredChannel,
+    "Preferred Channel"
+  );
 // ─── Athlete Languages ────────────────────────────────────────────────────────
 
 export async function getAthleteLanguages(filters: LookupFilters = {}) {
@@ -134,6 +165,13 @@ export async function updateAthleteLanguage(
     code,
   });
 }
+export const deleteAthleteLanguage = (id: string) =>
+  deleteLookupItem(
+    id,
+    repo.findAthleteLanguageById,
+    repo.deleteAthleteLanguage,
+    "Language"
+  );
 // ─── Industries ───────────────────────────────────────────────────────────────
 
 export async function getIndustries(filters: LookupFilters = {}) {
@@ -157,6 +195,9 @@ export const updateIndustry = (id: string, data: { name: string }) =>
     repo.updateIndustry,
     "Industry"
   );
+
+export const deleteIndustry = (id: string) =>
+  deleteLookupItem(id, repo.findIndustryById, repo.deleteIndustry, "Industry");
 
 // ─── Company ───────────────────────────────────────────────────────────
 export async function getCompanies(filters: LookupFilters = {}) {
@@ -187,3 +228,29 @@ export async function createCompany(data: {
     industryId: data.industryId,
   });
 }
+
+export async function updateCompany(
+  id: string,
+  data: {
+    name: string;
+    website: string;
+    industryId: string;
+  }
+) {
+  const company = await repo.findCompanyById(id);
+
+  if (!company) {
+    throw new AppError(404, "Company not found", "NOT_FOUND");
+  }
+  const existing = await repo.findCompanyByName(data.name);
+  if (existing && existing.id !== id) {
+    throw new AppError(409, "Company already exists", "ALREADY_EXIST");
+  }
+  const industry = await repo.findIndustryById(data.industryId);
+  if (!industry) {
+    throw new AppError(404, "Industry not found", "NOT_FOUND");
+  }
+  return repo.updateCompany(id, data);
+}
+export const deleteCompany = (id: string) =>
+  deleteLookupItem(id, repo.findCompanyById, repo.deleteCompany, "Company");

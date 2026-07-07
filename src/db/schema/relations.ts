@@ -1,5 +1,18 @@
 import { relations } from "drizzle-orm";
-import { brands, brandApprovalLogs } from "./brands";
+import {
+  brands,
+  brandApprovalLogs,
+  companies,
+  brandHealthConditions,
+  brandCampaignObjectives,
+  brandPreferredChannels,
+  brandRequiredLanguages,
+  industries,
+  healthConditions,
+  campaignObjectives,
+  preferredChannels,
+  athleteLanguages,
+} from "./brands";
 import { platformTaxonomy, brandTaxonomySelections } from "./taxonomy";
 import {
   otpVerifications,
@@ -22,7 +35,29 @@ import {
 } from "./admin-auth";
 
 // ── Brands ────────────────────────────────────────────────────────────────────
-export const brandsRelations = relations(brands, ({ many }) => ({
+// export const brandsRelations = relations(brands, ({ many }) => ({
+//   approvalLogs: many(brandApprovalLogs),
+//   taxonomySelections: many(brandTaxonomySelections),
+//   otpVerifications: many(otpVerifications),
+//   socialProviders: many(socialProviders),
+//   refreshTokens: many(refreshTokens),
+//   authLogs: many(authLogs),
+// }));
+
+export const brandsRelations = relations(brands, ({ one, many }) => ({
+  company: one(companies, {
+    fields: [brands.companyId],
+    references: [companies.id],
+  }),
+
+  healthConditions: many(brandHealthConditions),
+
+  campaignObjectives: many(brandCampaignObjectives),
+
+  preferredChannels: many(brandPreferredChannels),
+
+  requiredLanguages: many(brandRequiredLanguages),
+
   approvalLogs: many(brandApprovalLogs),
   taxonomySelections: many(brandTaxonomySelections),
   otpVerifications: many(otpVerifications),
@@ -30,7 +65,70 @@ export const brandsRelations = relations(brands, ({ many }) => ({
   refreshTokens: many(refreshTokens),
   authLogs: many(authLogs),
 }));
+export const companiesRelations = relations(companies, ({ one, many }) => ({
+  industry: one(industries, {
+    fields: [companies.industryId],
+    references: [industries.id],
+  }),
+  brands: many(brands),
+}));
 
+export const brandHealthConditionsRelations = relations(
+  brandHealthConditions,
+  ({ one }) => ({
+    brand: one(brands, {
+      fields: [brandHealthConditions.brandId],
+      references: [brands.id],
+    }),
+
+    healthCondition: one(healthConditions, {
+      fields: [brandHealthConditions.healthConditionId],
+      references: [healthConditions.id],
+    }),
+  })
+);
+export const brandCampaignObjectivesRelations = relations(
+  brandCampaignObjectives,
+  ({ one }) => ({
+    brand: one(brands, {
+      fields: [brandCampaignObjectives.brandId],
+      references: [brands.id],
+    }),
+
+    campaignObjective: one(campaignObjectives, {
+      fields: [brandCampaignObjectives.campaignObjectiveId],
+      references: [campaignObjectives.id],
+    }),
+  })
+);
+export const brandPreferredChannelsRelations = relations(
+  brandPreferredChannels,
+  ({ one }) => ({
+    brand: one(brands, {
+      fields: [brandPreferredChannels.brandId],
+      references: [brands.id],
+    }),
+
+    channel: one(preferredChannels, {
+      fields: [brandPreferredChannels.channelId],
+      references: [preferredChannels.id],
+    }),
+  })
+);
+export const brandRequiredLanguagesRelations = relations(
+  brandRequiredLanguages,
+  ({ one }) => ({
+    brand: one(brands, {
+      fields: [brandRequiredLanguages.brandId],
+      references: [brands.id],
+    }),
+
+    language: one(athleteLanguages, {
+      fields: [brandRequiredLanguages.languageId],
+      references: [athleteLanguages.id],
+    }),
+  })
+);
 // ── Brand Approval Logs ───────────────────────────────────────────────────────
 export const brandApprovalLogsRelations = relations(
   brandApprovalLogs,

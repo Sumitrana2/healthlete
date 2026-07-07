@@ -7,7 +7,7 @@ router.get(
   "/",
   async (_req, res, next) => {
     try {
-      const results = await lookupService.getPreferredChannels({
+      const results = await lookupService.getHealthConditions({
         isActive: true,
         fields: ["id", "name"],
       });

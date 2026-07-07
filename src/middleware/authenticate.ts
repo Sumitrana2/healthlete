@@ -8,10 +8,9 @@ declare global {
   namespace Express {
     interface Request {
       brand?: {
-        id:             string;
-        email:          string;
-        isOnboardingComplete:boolean | null;
-        // companyName:    string;
+        id: string;
+        email: string;
+        isOnboardingComplete: boolean | null;
         approvalStatus: string;
       };
     }
@@ -29,24 +28,28 @@ export async function authenticate(
     if (!token) throw new AppError(401, "Unauthorized", "NO_TOKEN");
 
     const payload = await verifyAccessToken(token);
-    if (payload.type !== 'brand') {
+    if (payload.type !== "brand") {
       throw new AppError(403, "Forbidden", "FORBIDDEN");
     }
     const brand = await findBrandByEmail(payload.email);
-    if (!brand)        throw new AppError(401, "Account not found", "BRAND_NOT_FOUND");
-    if (!brand.isActive) throw new AppError(403, "Account deactivated", "ACCOUNT_INACTIVE");
+    if (!brand) throw new AppError(401, "Account not found", "BRAND_NOT_FOUND");
+    if (!brand.isActive)
+      throw new AppError(403, "Account deactivated", "ACCOUNT_INACTIVE");
 
     req.brand = {
-      id:             brand.id,
-      email:          brand.email,
-      isOnboardingComplete:brand.isOnboardingComplete,
-      // companyName:    brand.companyName,
+      id: brand.id,
+      email: brand.email,
+      isOnboardingComplete: brand.isOnboardingComplete,
       approvalStatus: brand.approvalStatus!,
     };
 
     next();
   } catch (error) {
-    logger.error({ error }, 'Auth middleware error');
-    next(error instanceof AppError ? error : new AppError(401, "Invalid or expired token", "INVALID_TOKEN"));
+    logger.error({ error }, "Auth middleware error");
+    next(
+      error instanceof AppError
+        ? error
+        : new AppError(401, "Invalid or expired token", "INVALID_TOKEN")
+    );
   }
 }

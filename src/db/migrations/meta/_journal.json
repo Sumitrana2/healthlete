@@ -15,6 +15,13 @@
       "when": 1783412110067,
       "tag": "0001_eager_hawkeye",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783421049277,
+      "tag": "0002_nostalgic_wasp",
+      "breakpoints": true
     }
   ]
 }

@@ -8,7 +8,7 @@ import {
   companies,
   companySizes,
 } from "../../../db/schema";
-import { ilike, eq, and, sql, desc } from "drizzle-orm";
+import { ilike, eq, and, sql, desc, asc } from "drizzle-orm";
 import type { CompanyField, LookupFilters } from "./lookup.types";
 import {
   deleteLookup,
@@ -20,6 +20,16 @@ import {
 } from "./lookup.repository.utils";
 import { makeUniqueSlug } from "../../../utils/slug";
 const DEFAULT_COMPANY_SIZE_ID = "0b30cff8-0b53-4676-8fe1-6dbd82c629ad";
+
+
+export async function getFirstCompanySize() {
+  const result = await db
+    .select()
+    .from(companySizes)
+    .orderBy(asc(companySizes.createdAt))
+    .limit(1);
+  return result[0] ?? null;
+}
 
 const campaignObjectiveFieldMap = {
   id: campaignObjectives.id,
@@ -336,13 +346,14 @@ export async function createCompany(data: {
   website: string | null;
   industryId: string;
 }) {
+  const companySizeId=await getFirstCompanySize()
   const [company] = await db
     .insert(companies)
     .values({
       name: data.name,
       website: data.website,
       industryId: data.industryId,
-      companySizeId: DEFAULT_COMPANY_SIZE_ID,
+      companySizeId: companySizeId.id,
 
       logoUrl: null,
       country: null,

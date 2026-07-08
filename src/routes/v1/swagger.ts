@@ -16,6 +16,9 @@ import '../../modules/brand-app/lookup/industries/brand.industries.swagger';
 // admin
 import '../../modules/admin-app/auth/admin.auth.swagger';
 
+// admin athlete
+import '../../modules/admin-app/athlete/admin.athlete.swagger';
+
 // admin/lookups
 import '../../modules/admin-app/lookup/company/admin.company.swagger';
 import '../../modules/admin-app/lookup/health-condition/admin.health-condition.swagger';

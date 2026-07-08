@@ -33,6 +33,8 @@ import {
   adminRefreshTokens,
   adminAuthLogs,
 } from "./admin-auth";
+import { athleteProviders } from "./athlete-providers";
+import { athleteHealthConditions } from "./athlete-health-conditions";
 
 // ── Brands ────────────────────────────────────────────────────────────────────
 // export const brandsRelations = relations(brands, ({ many }) => ({
@@ -201,9 +203,23 @@ export const authLogsRelations = relations(authLogs, ({ one }) => ({
 // scoring relations
 export const athletesRelations = relations(athletes, ({ many, one }) => ({
   platformLinks: many(athletePlatformLinks),
-
+  providers: many(athleteProviders),
+  healthConditions: many(athleteHealthConditions), 
   finalScore: one(athleteFinalScores),
 }));
+export const athleteHealthConditionsRelations = relations(
+  athleteHealthConditions,
+  ({ one }) => ({
+    athlete: one(athletes, {
+      fields: [athleteHealthConditions.athleteId],
+      references: [athletes.id],
+    }),
+    healthCondition: one(healthConditions, {
+      fields: [athleteHealthConditions.healthConditionId],
+      references: [healthConditions.id],
+    }),
+  })
+);
 
 export const athletePlatformLinksRelations = relations(
   athletePlatformLinks,

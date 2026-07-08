@@ -19,7 +19,6 @@ import {
   updateLookup,
 } from "./lookup.repository.utils";
 import { makeUniqueSlug } from "../../../utils/slug";
-const DEFAULT_COMPANY_SIZE_ID = "0b30cff8-0b53-4676-8fe1-6dbd82c629ad";
 
 
 export async function getFirstCompanySize() {

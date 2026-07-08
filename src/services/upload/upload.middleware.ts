@@ -4,17 +4,23 @@ import path from 'path';
 import { randomUUID } from 'crypto';
 import { Request } from 'express';
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE_BYTES, UploadFolder } from './upload.types';
-
+import fs from "fs";
 function resolveFolder(req: Request): UploadFolder {
-  if (req.baseUrl.includes('brands'))    return 'brands';
+  if (req.baseUrl.includes('brands')) return 'brands';
   if (req.baseUrl.includes('campaigns')) return 'campaigns';
-  return ''
+  if (req.baseUrl.includes('athletes')) return 'athletes';
+  throw new Error("Unknown upload folder");
 }
 
 const storage = multer.diskStorage({
   destination: (req, _file, cb) => {
     const folder = resolveFolder(req);
     const uploadPath = path.join(process.cwd(), 'src/uploads', folder);
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, {
+          recursive: true,
+      });
+  }
     cb(null, uploadPath);
   },
   filename: (_req, file, cb) => {
@@ -37,4 +43,6 @@ const upload = multer({
 });
 
 export const uploadSingleImage = upload.single('image'); 
+export const uploadMultipleImages = upload.array("images", 10);
+
 export { resolveFolder };

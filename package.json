@@ -16,7 +16,8 @@
     "test:coverage": "jest --coverage",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
-    "db:seed": "tsx src/scripts/index.ts"
+    "db:seed": "tsx src/scripts/index.ts",
+    "db:push": "drizzle-kit push"
   },
   "keywords": [
     "healthlete",

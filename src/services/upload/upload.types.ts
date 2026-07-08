@@ -1,5 +1,5 @@
 // validations
-export type UploadFolder = 'brands' | 'campaigns'| '';
+export type UploadFolder = 'brands' | 'campaigns'| 'athletes';
 
 export const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
 export type AllowedMimeType = (typeof ALLOWED_MIME_TYPES)[number];

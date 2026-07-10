@@ -1,6 +1,6 @@
 import * as repo from "./lookup.repository";
-import type { LookupFilters, LookupUpdateDto } from "./lookup.types";
-import { paginate } from "../../../utils/pagination.util";
+import type { LookupFilters } from "./lookup.types";
+import { paginate } from "../../../utils/pagination-lookup.util";
 import {
   createLookupItem,
   deleteLookupItem,
@@ -18,23 +18,15 @@ export async function getCampaignObjectives(filters: LookupFilters = {}) {
   );
 }
 
-export const createCampaignObjective = (data: { name: string }) =>
+export const createCampaignObjective = (data: { name: string,isActive:boolean }) =>
   createLookupItem(
     data.name,
+    data.isActive,
     repo.findCampaignObjectiveByName,
     repo.createCampaignObjective,
     "Campaign Objective"
   );
 
-// export const updateCampaignObjective = (id: string, data: { name: string }) =>
-//   updateLookupItem(
-//     id,
-//     data.name,
-//     repo.findCampaignObjectiveById,
-//     repo.findCampaignObjectiveByName,
-//     repo.updateCampaignObjective,
-//     "Campaign Objective"
-//   );
 export const updateCampaignObjective = (
   id: string,
   data: Partial<{
@@ -69,9 +61,10 @@ export async function getHealthConditions(filters: LookupFilters = {}) {
   );
 }
 
-export const createHealthCondition = (data: { name: string }) =>
+export const createHealthCondition = (data: { name: string,isActive:boolean }) =>
   createLookupItem(
     data.name,
+    data.isActive,
     repo.findHealthConditionByName,
     repo.createHealthCondition,
     "Health Condition"
@@ -111,9 +104,10 @@ export async function getPreferredChannels(filters: LookupFilters = {}) {
   );
 }
 
-export const createPreferredChannel = (data: { name: string }) =>
+export const createPreferredChannel = (data: { name: string, isActive:boolean  }) =>
   createLookupItem(
     data.name,
+    data.isActive,
     repo.findPreferredChannelByName,
     repo.createPreferredChannel,
     "Preferred Channel"
@@ -150,10 +144,11 @@ export async function getAthleteLanguages(filters: LookupFilters = {}) {
     repo.getAthleteLanguagesCount
   );
 }
-export async function createLanguage(data: { name: string; code: string }) {
+export async function createLanguage(data: { name: string; code: string,isActive:boolean }) {
   const payload = {
     name: data.name.trim(),
     code: data.code.trim().toUpperCase(),
+    isActive: data.isActive,
   };
   const nameExists = await repo.findLanguageByName(payload.name);
   if (nameExists) {
@@ -229,9 +224,10 @@ export async function getIndustries(filters: LookupFilters = {}) {
   return paginate(filters, repo.getIndustries, repo.getIndustriesCount);
 }
 
-export const createIndustry = (data: { name: string }) =>
+export const createIndustry = (data: { name: string , isActive:boolean }) =>
   createLookupItem(
     data.name,
+    data.isActive,
     repo.findIndustryByName,
     repo.createIndustry,
     "Industry"
@@ -266,6 +262,7 @@ export async function createCompany(data: {
   name: string;
   website?: string;
   industryId: string;
+  isActive:boolean;
 }) {
   const name = data.name.trim();
 
@@ -285,6 +282,7 @@ export async function createCompany(data: {
     name,
     website: data.website?.trim() ?? null,
     industryId: data.industryId,
+    isActive:data.isActive
   });
 }
 

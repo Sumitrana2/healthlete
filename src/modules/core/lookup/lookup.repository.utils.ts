@@ -68,8 +68,9 @@ export async function getLookupCount(
 
 export async function createLookupItem(
   name: string,
+  isActive: boolean,
   findByName: (name: string) => Promise<any>,
-  create: (data: { name: string }) => Promise<any>,
+  create: (data: { name: string,isActive:boolean }) => Promise<any>,
   entityName: string
 ) {
   const trimmedName = name.trim();
@@ -80,7 +81,7 @@ export async function createLookupItem(
     throw new AppError(409, `${entityName} already exists`, "ALREADY_EXIST");
   }
 
-  return create({ name: trimmedName });
+  return create({ name: trimmedName,isActive:isActive });
 }
 
 export async function findLookupByName(

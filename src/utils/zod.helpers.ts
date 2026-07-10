@@ -22,4 +22,4 @@ export const jsonArray = <T extends z.ZodTypeAny>(schema: T) =>
     }
 
     return value;
-  }, z.array(schema));
+  }, z.array(schema).optional()); 

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as lookupService from "../../../core/lookup/lookup.service";
-import { toNumber } from "../../../../utils/pagination.util";
+import { toNumber } from "../../../../utils/pagination-lookup.util";
 import { validate } from "../../../../middleware/validate";
 import { createChannelsSchema, updatePreferredChannelSchema } from "./admin.channels.schema";
 
@@ -11,8 +11,8 @@ router.post(
   validate(createChannelsSchema),
   async (req, res, next) => {
     try {
-      const { name } = req.body;
-      const result = await lookupService.createPreferredChannel({ name });
+      const { name,isActive } = req.body;
+      const result = await lookupService.createPreferredChannel({ name,isActive });
       res.status(201).json({
         success: true,
         message: "Preferred channel created successfully",

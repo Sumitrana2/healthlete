@@ -8,8 +8,8 @@ import campaignObjective from "../../modules/brand-app/lookup/campaign-objective
 import channels from "../../modules/brand-app/lookup/channels/brand.channels.routes";
 import languages from "../../modules/brand-app/lookup/languages/brand.languages.routes";
 import industries from "../../modules/brand-app/lookup/industries/brand.industries.routes";
+import athleteRoutes from "../../modules/brand-app/athlete/brand.athlete.routes";
 import { authenticate } from "../../middleware/authenticate";
-
 const router = Router();
 
 router.use("/auth", brandAuthRoutes);
@@ -20,5 +20,5 @@ router.use("/campaign-objectives", authenticate, campaignObjective);
 router.use("/channels", authenticate, channels);
 router.use("/languages", authenticate, languages);
 router.use("/industries", authenticate, industries);
-
+router.use("/athletes", authenticate,athleteRoutes);
 export default router;

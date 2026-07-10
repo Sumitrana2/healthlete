@@ -10,7 +10,8 @@ import '../../modules/brand-app/lookup/channels/brand.channels.swagger';
 import '../../modules/brand-app/lookup/languages/brand.languages.swagger';
 import '../../modules/brand-app/lookup/industries/brand.industries.swagger';
 
-
+// brand athelete
+import '../../modules/brand-app/athlete/brand.athlete.swagger';
 
 
 // admin

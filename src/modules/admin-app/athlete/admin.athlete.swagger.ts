@@ -1,6 +1,10 @@
 import { registry } from "../../../config/swagger";
 import { z } from "zod";
-import { AthleteSchema, createAthleteBodySchema, updateAthleteBodySchema } from "./admin.athlete.schema";
+import {
+  AthleteSchema,
+  createAthleteBodySchema,
+  updateAthleteBodySchema,
+} from "./admin.athlete.schema";
 import {
   errorResponse,
   paginationResponse,
@@ -25,7 +29,6 @@ const multipartSchema = createAthleteBodySchema.extend({
   }),
 });
 
-
 const updateMultipartSchema = updateAthleteBodySchema.extend({
   image: z.any().optional().openapi({
     type: "string",
@@ -38,7 +41,6 @@ const updateMultipartSchema = updateAthleteBodySchema.extend({
   healthConditionIds: z.string().optional().openapi({
     example: '["550e8400-e29b-41d4-a716-446655440000"]',
   }),
-  
 });
 
 registry.registerPath({
@@ -162,6 +164,33 @@ registry.registerPath({
     400: { description: "Validation failed" },
     404: { description: "Athlete not found" },
     415: { description: "Invalid file type" },
+    500: {
+      description: "Internal server error",
+      content: { "application/json": { schema: errorResponse } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "delete",
+  path: "/admin/athletes/{id}",
+  tags: ["Admin Athletes"],
+  summary: "Delete athlete",
+  request: {
+    params: z.object({
+      id: z.string().uuid().describe("Athlete ID"),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Athlete deleted successfully",
+      content: {
+        "application/json": {
+          schema: successResponse(z.null()),
+        },
+      },
+    },
+    404: { description: "Athlete not found" },
     500: {
       description: "Internal server error",
       content: { "application/json": { schema: errorResponse } },

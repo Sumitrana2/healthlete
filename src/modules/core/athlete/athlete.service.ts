@@ -52,3 +52,12 @@ export async function updateAthlete(id: string, data: UpdateAthleteDto) {
 
   return result;
 }
+
+export async function deleteAthlete(id: string) {
+    const existing = await repository.findAthleteById(id);
+    if (!existing) throw new AppError(404, "Athlete not found");
+      if (existing.avatarUrl) {
+      await deleteFileByUrl(existing.avatarUrl);
+    }
+    await repository.deleteAthleteById(id);
+  }

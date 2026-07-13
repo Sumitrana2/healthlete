@@ -1,8 +1,14 @@
 import { Router } from "express";
 import { validate } from "../../../middleware/validate";
-import { createAthleteSchema, updateAthleteSchema } from "./admin.athlete.schema";
+import {
+  createAthleteSchema,
+  updateAthleteSchema,
+} from "./admin.athlete.schema";
 import { uploadSingleImage } from "../../../services/upload/upload.middleware";
-import { buildFileResult, deleteUploadedFiles } from "../../../services/upload/upload.service";
+import {
+  buildFileResult,
+  deleteUploadedFiles,
+} from "../../../services/upload/upload.service";
 import { requireFile } from "../../../middleware/validateFile";
 import * as athleteService from "../../core/athlete/athlete.service";
 import { toNumber } from "../../../utils/pagination-lookup.util";
@@ -16,9 +22,7 @@ router.post(
   validate(createAthleteSchema, "body", true),
   async (req, res, next) => {
     try {
-      const avatar = req.file
-        ? buildFileResult(req.file, "athletes")
-        : null;
+      const avatar = req.file ? buildFileResult(req.file, "athletes") : null;
 
       const result = await athleteService.createAthlete({
         ...req.body,
@@ -108,5 +112,18 @@ router.patch(
     }
   }
 );
+
+router.delete("/:id", async (req, res, next) => {
+  try {
+    await athleteService.deleteAthlete(req.params.id);
+    res.json({
+      success: true,
+      message: "Athlete deleted successfully",
+      data: null,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 export default router;

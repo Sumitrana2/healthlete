@@ -3,7 +3,11 @@ import { athletes, athleteHealthConditions } from "../../../db/schema";
 import { eq, ilike, and, inArray, sql, count } from "drizzle-orm";
 import { makeUniqueSlug } from "../../../utils/slug";
 import { paginate } from "../../../utils/paginate.util";
-import type { AthleteFilters, CreateAthleteDto, UpdateAthleteDto } from "./athlete.types";
+import type {
+  AthleteFilters,
+  CreateAthleteDto,
+  UpdateAthleteDto,
+} from "./athlete.types";
 
 export async function insertAthlete(data: CreateAthleteDto) {
   const slug = await makeUniqueSlug(
@@ -171,4 +175,8 @@ export async function updateAthleteById(id: string, data: UpdateAthleteDto) {
     .returning();
 
   return updated;
+}
+
+export async function deleteAthleteById(id: string) {
+  await db.delete(athletes).where(eq(athletes.id, id));
 }

@@ -23,6 +23,7 @@ export async function addCompanyToBrand(
       name: data.name.trim(),
       website: data.website,
       industryId: data.industryId,
+      isActive: true,
     });
   }
 

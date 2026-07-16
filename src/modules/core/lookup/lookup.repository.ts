@@ -91,7 +91,7 @@ export const getCampaignObjectivesCount = (filters: LookupFilters = {}) =>
 export const findCampaignObjectiveByName = (name: string) =>
   findLookupByName(campaignObjectives, campaignObjectives.name, name);
 
-export const createCampaignObjective = (data: { name: string }) =>
+export const createCampaignObjective = (data: { name: string,isActive:boolean }) =>
   db.insert(campaignObjectives).values(data).returning();
 
 export const findCampaignObjectiveById = (id: string) =>
@@ -119,7 +119,7 @@ export const getHealthConditionsCount = (filters: LookupFilters = {}) =>
 export const findHealthConditionByName = (name: string) =>
   findLookupByName(healthConditions, healthConditions.name, name);
 
-export async function createHealthCondition(data: { name: string }) {
+export async function createHealthCondition(data: { name: string,isActive:boolean }) {
   const [result] = await db.insert(healthConditions).values(data).returning();
   return result;
 }
@@ -150,7 +150,7 @@ export const getPreferredChannelsCount = (filters: LookupFilters = {}) =>
 export const findPreferredChannelByName = (name: string) =>
   findLookupByName(preferredChannels, preferredChannels.name, name);
 
-export const createPreferredChannel = (data: { name: string }) =>
+export const createPreferredChannel = (data: { name: string,isActive:boolean }) =>
   db.insert(preferredChannels).values(data).returning();
 export const findPreferredChannelById = (id: string) =>
   findLookupById(preferredChannels, preferredChannels.id, id);
@@ -188,7 +188,7 @@ export async function findLanguageByCode(code: string) {
   return language;
 }
 
-export async function createLanguage(data: { name: string; code: string }) {
+export async function createLanguage(data: { name: string; code: string,isActive:boolean }) {
   const [result] = await db.insert(athleteLanguages).values(data).returning();
 
   return result;
@@ -238,7 +238,7 @@ export const getIndustriesCount = (filters: LookupFilters = {}) =>
 export const findIndustryByName = (name: string) =>
   findLookupByName(industries, industries.name, name);
 
-export async function createIndustry(data: { name: string }) {
+export async function createIndustry(data: { name: string ,isActive :boolean}) {
   const slug = await makeUniqueSlug(data.name, industries, industries.slug);
   const [result] = await db
     .insert(industries)
@@ -344,6 +344,7 @@ export async function createCompany(data: {
   name: string;
   website: string | null;
   industryId: string;
+  isActive:boolean;
 }) {
   const companySizeId=await getFirstCompanySize()
   const [company] = await db
@@ -352,6 +353,7 @@ export async function createCompany(data: {
       name: data.name,
       website: data.website,
       industryId: data.industryId,
+      isActive: data.isActive,
       companySizeId: companySizeId.id,
 
       logoUrl: null,

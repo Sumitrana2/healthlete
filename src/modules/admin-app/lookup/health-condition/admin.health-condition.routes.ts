@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as lookupService from "../../../core/lookup/lookup.service";
-import { toNumber } from "../../../../utils/pagination.util";
+import { toNumber } from "../../../../utils/pagination-lookup.util";
 import { createHealthConditionSchema, updateHealthConditionSchema } from "./admin.health-condition.schema";
 import { validate } from "../../../../middleware/validate";
 
@@ -11,8 +11,8 @@ router.post(
   validate(createHealthConditionSchema),
   async (req, res, next) => {
     try {
-      const { name } = req.body;
-      const result = await lookupService.createHealthCondition({ name });
+      const { name, isActive } = req.body;
+      const result = await lookupService.createHealthCondition({ name ,isActive});
       res.status(201).json({
         success: true,
         message: "Health condition created successfully",

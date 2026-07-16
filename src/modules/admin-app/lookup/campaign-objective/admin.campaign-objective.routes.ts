@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as lookupService from "../../../core/lookup/lookup.service";
-import { toNumber } from "../../../../utils/pagination.util";
+import { toNumber } from "../../../../utils/pagination-lookup.util";
 import {
   createCampaignObjectiveSchema,
   updateCampaignObjectiveSchema,
@@ -13,8 +13,8 @@ router.post(
   validate(createCampaignObjectiveSchema),
   async (req, res, next) => {
     try {
-      const { name } = req.body;
-      const result = await lookupService.createCampaignObjective({ name });
+      const { name,isActive } = req.body;
+      const result = await lookupService.createCampaignObjective({ name,isActive });
       res.status(201).json({
         success: true,
         message: "Campaign objective created successfully",

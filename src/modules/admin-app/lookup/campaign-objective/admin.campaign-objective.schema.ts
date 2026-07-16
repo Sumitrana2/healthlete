@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const createCampaignObjectiveSchema = z.object({
   name: z.string().min(1).max(150),
+  isActive: z.boolean(),
 });
 
 export const updateCampaignObjectiveSchema = z

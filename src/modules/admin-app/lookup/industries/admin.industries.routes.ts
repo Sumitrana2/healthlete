@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as lookupService from "../../../core/lookup/lookup.service";
-import { toNumber } from "../../../../utils/pagination.util";
+import { toNumber } from "../../../../utils/pagination-lookup.util";
 import {
   createIndustrySchema,
   updateIndustrySchema,
@@ -10,8 +10,8 @@ const router = Router();
 
 router.post("/", validate(createIndustrySchema), async (req, res, next) => {
   try {
-    const { name } = req.body;
-    const result = await lookupService.createIndustry({ name });
+    const { name,isActive } = req.body;
+    const result = await lookupService.createIndustry({ name,isActive });
     res.status(201).json({
       success: true,
       message: "Industry created successfully",

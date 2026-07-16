@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as lookupService from "../../../core/lookup/lookup.service";
-import { toNumber } from "../../../../utils/pagination.util";
+import { toNumber } from "../../../../utils/pagination-lookup.util";
 import { createLanguageSchema, updateLanguageSchema } from "./admin.languages.schema";
 import { validate } from "../../../../middleware/validate";
 

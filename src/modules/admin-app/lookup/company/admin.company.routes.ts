@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as lookupService from "../../../core/lookup/lookup.service";
-import { toNumber } from "../../../../utils/pagination.util";
+import { toNumber } from "../../../../utils/pagination-lookup.util";
 import { validate } from "../../../../middleware/validate";
 import { createCompanySchema, updateCompanySchema } from "./admin.company.schema";
 
@@ -11,12 +11,13 @@ router.post(
   validate(createCompanySchema),
   async (req, res, next) => {
     try {
-      const { name, website, industryId } = req.body;
+      const { name, website, industryId,isActive } = req.body;
 
       const company = await lookupService.createCompany({
         name,
         website,
         industryId,
+        isActive
       });
 
       res.status(201).json({

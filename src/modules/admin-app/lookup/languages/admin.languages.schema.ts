@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const createLanguageSchema = z.object({
   name: z.string().trim().min(2).max(100),
+  isActive: z.boolean(),
   code: z
     .string()
     .trim()

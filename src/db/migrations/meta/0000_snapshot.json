@@ -1,5 +1,5 @@
 {
-  "id": "0b0520aa-1752-464c-8054-8a72c28be633",
+  "id": "282aef78-c188-4058-87e7-0381a32338af",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -878,6 +878,13 @@
           "notNull": false,
           "default": true
         },
+        "is_terms_conditions_accepted": {
+          "name": "is_terms_conditions_accepted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
         "last_login_at": {
           "name": "last_login_at",
           "type": "timestamp",
@@ -1101,6 +1108,13 @@
           "type": "varchar(100)",
           "primaryKey": false,
           "notNull": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
         },
         "industry_id": {
           "name": "industry_id",
@@ -2423,8 +2437,14 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "full_name": {
-          "name": "full_name",
+        "first_name": {
+          "name": "first_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_name": {
+          "name": "last_name",
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
@@ -2441,9 +2461,15 @@
           "primaryKey": false,
           "notNull": false
         },
-        "health_conditions": {
-          "name": "health_conditions",
-          "type": "text[]",
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avatar_url": {
+          "name": "avatar_url",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -2453,19 +2479,12 @@
           "primaryKey": false,
           "notNull": false
         },
-        "sync_status": {
-          "name": "sync_status",
-          "type": "athlete_sync_status",
-          "typeSchema": "public",
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
           "primaryKey": false,
-          "notNull": true,
-          "default": "'pending'"
-        },
-        "last_synced_at": {
-          "name": "last_synced_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": true
         },
         "created_at": {
           "name": "created_at",
@@ -2512,12 +2531,57 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "athletes_slug_unique": {
+          "name": "athletes_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "slug"
+          ]
+        }
+      }
+    },
+    "public.athlete_health_conditions": {
+      "name": "athlete_health_conditions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
-        "athletes_sync_status_idx": {
-          "name": "athletes_sync_status_idx",
+        "athlete_id": {
+          "name": "athlete_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "health_condition_id": {
+          "name": "health_condition_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ahc_athlete_id_idx": {
+          "name": "ahc_athlete_id_idx",
           "columns": [
             {
-              "expression": "sync_status",
+              "expression": "athlete_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -2529,14 +2593,42 @@
           "with": {}
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "athlete_health_conditions_athlete_id_athletes_id_fk": {
+          "name": "athlete_health_conditions_athlete_id_athletes_id_fk",
+          "tableFrom": "athlete_health_conditions",
+          "tableTo": "athletes",
+          "columnsFrom": [
+            "athlete_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "athlete_health_conditions_health_condition_id_health_conditions_id_fk": {
+          "name": "athlete_health_conditions_health_condition_id_health_conditions_id_fk",
+          "tableFrom": "athlete_health_conditions",
+          "tableTo": "health_conditions",
+          "columnsFrom": [
+            "health_condition_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "athletes_slug_unique": {
-          "name": "athletes_slug_unique",
+        "ahc_unique": {
+          "name": "ahc_unique",
           "nullsNotDistinct": false,
           "columns": [
-            "slug"
+            "athlete_id",
+            "health_condition_id"
           ]
         }
       }
@@ -2558,6 +2650,13 @@
           "primaryKey": false,
           "notNull": true
         },
+        "provider": {
+          "name": "provider",
+          "type": "provider",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
         "platform": {
           "name": "platform",
           "type": "platform",
@@ -2565,8 +2664,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "hyperaudit_social_id": {
-          "name": "hyperaudit_social_id",
+        "provider_social_id": {
+          "name": "provider_social_id",
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false
@@ -2602,20 +2701,13 @@
           "notNull": true,
           "default": false
         },
-        "is_primary": {
-          "name": "is_primary",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
         "report_state": {
           "name": "report_state",
           "type": "report_state",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'pending'"
+          "default": "'not_synced'"
         },
         "last_synced_at": {
           "name": "last_synced_at",
@@ -2688,7 +2780,7 @@
           "name": "apl_social_id_idx",
           "columns": [
             {
-              "expression": "hyperaudit_social_id",
+              "expression": "provider_social_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -3477,6 +3569,13 @@
         "rejected"
       ]
     },
+    "public.provider": {
+      "name": "provider",
+      "schema": "public",
+      "values": [
+        "hypeauditor"
+      ]
+    },
     "public.athlete_sync_status": {
       "name": "athlete_sync_status",
       "schema": "public",
@@ -3508,9 +3607,9 @@
       "name": "report_state",
       "schema": "public",
       "values": [
-        "pending",
-        "processing",
-        "completed",
+        "not_synced",
+        "syncing",
+        "ready",
         "failed"
       ]
     }

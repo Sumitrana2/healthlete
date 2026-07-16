@@ -220,6 +220,15 @@ export const athleteHealthConditionsRelations = relations(
     }),
   })
 );
+export const athleteProvidersRelations = relations(
+  athleteProviders,
+  ({ one }) => ({
+    athlete: one(athletes, {
+      fields: [athleteProviders.athleteId],
+      references: [athletes.id],
+    }),
+  })
+);
 
 export const athletePlatformLinksRelations = relations(
   athletePlatformLinks,

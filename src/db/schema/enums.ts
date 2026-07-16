@@ -16,7 +16,10 @@ export const adminRoleEnum = pgEnum("admin_role", [
   "sub_admin",
 ]);
 
-
+/**
+ * Social Media Platforms
+ */
+export const athleteScoringProvider = pgEnum("provider", ["hypeauditor"]);
 
 /**
  * Social Media Platforms
@@ -27,17 +30,15 @@ export const platformEnum = pgEnum("platform", [
   "twitter",
 ]);
 
-
 /**
  * HyperAuditor Report Status
  */
 export const reportStateEnum = pgEnum("report_state", [
-  "pending",
-  "processing",
-  "completed",
+  "not_synced",
+  "syncing",
+  "ready",
   "failed",
 ]);
-
 
 /**
  * Athlete Sync Status

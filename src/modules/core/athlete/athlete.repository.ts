@@ -11,7 +11,8 @@ import type {
 
 export async function insertAthlete(data: CreateAthleteDto) {
   const slug = await makeUniqueSlug(
-    `${data.firstName} ${data.lastName}`,
+    `${data.fullName}`,
+    // `${data.firstName} ${data.lastName}`,
     athletes,
     athletes.slug
   );
@@ -19,13 +20,14 @@ export async function insertAthlete(data: CreateAthleteDto) {
   const [athlete] = await db
     .insert(athletes)
     .values({
-      firstName: data.firstName,
-      lastName: data.lastName,
+      // firstName: data.firstName,
+      // lastName: data.lastName,
+      fullName: data.fullName,
       slug,
       country: data.country,
       description: data.description,
       avatarUrl: data.avatarUrl,
-      tags: data.tags ?? [],
+      // tags: data.tags ?? [],
     })
     .returning();
 
@@ -79,8 +81,12 @@ function buildWhereConditions(filters: AthleteFilters, athleteIds?: string[]) {
 
   if (filters.search) {
     conditions.push(
-      sql`(${ilike(athletes.firstName, `%${filters.search}%`)} OR ${ilike(
-        athletes.lastName,
+      // sql`(${ilike(athletes.firstName, `%${filters.search}%`)} OR ${ilike(
+      //   athletes.lastName,
+      //   `%${filters.search}%`
+      // )})`
+      sql`(${ilike(athletes.fullName, `%${filters.search}%`)} OR ${ilike(
+        athletes.fullName,
         `%${filters.search}%`
       )})`
     );

@@ -22,8 +22,9 @@ export interface AthleteFilters {
 }
 
 export interface CreateAthleteDto {
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
+  fullName: string;
   country?: string;
   description?: string;
   tags?: string[];
@@ -34,6 +35,7 @@ export interface CreateAthleteDto {
 export interface UpdateAthleteDto {
     firstName?: string;
     lastName?: string;
+    fullName?: string;
     country?: string;
     description?: string;
     tags?: string[];

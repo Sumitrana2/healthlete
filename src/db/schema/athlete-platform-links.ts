@@ -42,5 +42,10 @@ export const athletePlatformLinks = pgTable(
       table.athleteId,
       table.platform
     ),
+    providerSocialUnique: uniqueIndex("provider_social_unique").on(
+      table.provider,
+      table.platform,
+      table.providerSocialId
+    )
   })
 );

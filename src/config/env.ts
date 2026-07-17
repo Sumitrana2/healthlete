@@ -36,7 +36,8 @@ const envSchema = z.object({
   OPENAI_API_KEY: z.string().optional(),
 
   // Vendors
-  HYPEAUDITOR_API_KEY: z.string().optional(),
+  HYPEAUDITOR_AUTH_ID: z.string().optional(),
+  HYPEAUDITOR_AUTH_TOKEN: z.string().optional(),
   PHYLLO_CLIENT_ID: z.string().optional(),
   PHYLLO_CLIENT_SECRET: z.string().optional(),
   SPONSOR_UNITED_API_KEY: z.string().optional(),

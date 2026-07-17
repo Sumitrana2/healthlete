@@ -19,7 +19,7 @@ export const adminRoleEnum = pgEnum("admin_role", [
 /**
  * Social Media Platforms
  */
-export const athleteScoringProvider = pgEnum("provider", ["hypeauditor"]);
+export const athleteScoringProvider = pgEnum("provider", ["hyperauditor"]);
 
 /**
  * Social Media Platforms

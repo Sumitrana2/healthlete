@@ -8,6 +8,7 @@ export * from './admin-auth';
 export * from "./athletes";
 export * from "./athlete-health-conditions";
 export * from "./athlete-platform-links";
+export * from "./athlete-providers";
 export * from "./instagram";
 export * from "./youtube";
 export * from "./twitter";

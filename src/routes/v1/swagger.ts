@@ -19,6 +19,7 @@ import '../../modules/admin-app/auth/admin.auth.swagger';
 
 // admin athlete
 import '../../modules/admin-app/athlete/admin.athlete.swagger';
+import '../../modules/admin-app/athletev1/admin.athlete.swagger';
 
 // admin/lookups
 import '../../modules/admin-app/lookup/company/admin.company.swagger';

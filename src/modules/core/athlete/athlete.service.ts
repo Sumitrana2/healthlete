@@ -2,25 +2,109 @@ import { AppError } from "../../../middleware/errorHandler";
 import { deleteFileByUrl } from "../../../services/upload/upload.service";
 import * as repository from "./athlete.repository";
 import type {
+  CreateAthleteWithPlatformDto,
+  AddPlatformDto,
   AthleteFilters,
-  CreateAthleteDto,
   UpdateAthleteDto,
 } from "./athlete.types";
+import * as hyperAuditorClient from "../hyperauditor/hyperauditor.client";
 
-export async function createAthlete(data: CreateAthleteDto) {
-  const athlete = await repository.insertAthlete(data);
+export async function searchAthletes(query: string) {
+  const results = await hyperAuditorClient.searchAthletes(query);
+  return results;
+}
 
-  if (data.healthConditionIds?.length) {
-    await repository.insertAthleteHealthConditions(
-      athlete.id,
-      data.healthConditionIds
+export async function createAthleteWithPlatform(
+  data: CreateAthleteWithPlatformDto
+) {
+  const { provider, platform } = data;
+
+  const existingLink = await repository.findExistingPlatformLink(
+    provider,
+    platform.platform,
+    platform.social_id
+  );
+
+  if (existingLink) {
+    throw new AppError(
+      409,
+      `This ${platform.platform} profile (${platform.username}) is already linked to athlete "${existingLink.athlete.fullName}"`
+    );
+  }
+  const similarAthletes = await repository.searchExistingAthletes(
+    platform.display_title
+  );
+
+  if (similarAthletes.length > 0 && !data.forceCreate) {
+    return {
+      requiresConfirmation: true,
+      similarAthletes: similarAthletes.map((a) => ({
+        id: a.id,
+        fullName: a.fullName,
+        avatarUrl: a.avatarUrl,
+      })),
+      athlete: null,
+    };
+  }
+  const athlete = await repository.insertAthleteForSync({
+    fullName: platform.display_title,
+    avatarUrl: platform.avatar_url ?? null,
+  });
+
+  await repository.upsertAthleteProvider(athlete.id, provider);
+  await repository.insertPlatformLink(athlete.id, provider, platform);
+
+  const result = await repository.findAthleteWithRelations(athlete.id);
+  if (!result) throw new AppError(500, "Athlete not found after creation");
+
+  return {
+    requiresConfirmation: false,
+    similarAthletes: [],
+    athlete: result,
+  };
+}
+
+export async function addPlatformToAthlete(data: AddPlatformDto) {
+  const { athleteId, provider, platform } = data;
+
+  const athlete = await repository.findAthleteById(athleteId);
+  if (!athlete) throw new AppError(404, "Athlete not found");
+
+  const existingLink = await repository.findExistingPlatformLink(
+    provider,
+    platform.platform,
+    platform.social_id
+  );
+
+  if (existingLink && existingLink.athleteId !== athleteId) {
+    throw new AppError(
+      409,
+      `This ${platform.platform} profile (${platform.username}) is already linked to athlete "${existingLink.athlete.fullName}"`
     );
   }
 
-  const result = await repository.findAthleteById(athlete.id);
-  if (!result) throw new AppError(500, "Athlete not found after creation");
+  const alreadyLinked = await repository.findAthletePlatformLink(
+    athleteId,
+    platform.platform
+  );
+  if (alreadyLinked) {
+    throw new AppError(
+      400,
+      `Athlete already has a ${platform.platform} profile linked`
+    );
+  }
+
+  await repository.upsertAthleteProvider(athleteId, provider);
+  await repository.insertPlatformLink(athleteId, provider, platform);
+
+  const result = await repository.findAthleteWithRelations(athleteId);
+  if (!result) throw new AppError(500, "Athlete not found after update");
 
   return result;
+}
+
+export async function searchExistingAthletes(name: string) {
+  return repository.searchExistingAthletes(name);
 }
 
 export async function getAthletes(filters: AthleteFilters) {
@@ -36,10 +120,12 @@ export async function getAthleteById(id: string) {
 export async function updateAthlete(id: string, data: UpdateAthleteDto) {
   const existing = await repository.findAthleteById(id);
   if (!existing) throw new AppError(404, "Athlete not found");
-  if (data.avatarUrl && existing.avatarUrl) {
-    await deleteFileByUrl(existing.avatarUrl);
-  }
-  await repository.updateAthleteById(id, data);
+
+  await repository.updateAthleteById(id, {
+    ...data,
+    ...(data.description !== undefined && { isDescriptionAdded: true }),
+  });
+
   if (data.healthConditionIds !== undefined) {
     await repository.replaceAthleteHealthConditions(
       id,
@@ -54,10 +140,24 @@ export async function updateAthlete(id: string, data: UpdateAthleteDto) {
 }
 
 export async function deleteAthlete(id: string) {
-    const existing = await repository.findAthleteById(id);
-    if (!existing) throw new AppError(404, "Athlete not found");
-      if (existing.avatarUrl) {
-      await deleteFileByUrl(existing.avatarUrl);
-    }
-    await repository.deleteAthleteById(id);
+  const existing = await repository.findAthleteById(id);
+  if (!existing) throw new AppError(404, "Athlete not found");
+
+  if (existing.avatarUrl) {
+    await deleteFileByUrl(existing.avatarUrl);
   }
+
+  await repository.deleteAthleteById(id);
+}
+
+export async function deletePlatform(athleteId: string, linkId: string) {
+  const athlete = await repository.findAthleteById(athleteId);
+  if (!athlete) throw new AppError(404, "Athlete not found");
+
+  const link = await repository.findPlatformLinkById(linkId);
+  if (!link || link.athleteId !== athleteId) {
+    throw new AppError(404, "Platform link not found for this athlete");
+  }
+
+  await repository.deletePlatformLinkById(linkId);
+}

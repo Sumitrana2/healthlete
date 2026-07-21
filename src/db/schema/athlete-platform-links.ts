@@ -8,6 +8,7 @@ import {
   timestamp,
   index,
   uniqueIndex,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 import { athletes } from "./athletes";
@@ -25,10 +26,12 @@ export const athletePlatformLinks = pgTable(
     providerSocialId: varchar("provider_social_id", { length: 255 }),
     username: varchar("username", { length: 255 }),
     profileUrl: text("profile_url"),
+    avatarUrl: text("avatar_url"),
     displayTitle: varchar("display_title", { length: 255 }),
     subscribersCount: integer("subscribers_count"),
     isVerified: boolean("is_verified").default(false).notNull(),
     reportState: reportStateEnum("report_state").default("not_synced").notNull(),
+    rawData: jsonb("raw_data"),
     lastSyncedAt: timestamp("last_synced_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),

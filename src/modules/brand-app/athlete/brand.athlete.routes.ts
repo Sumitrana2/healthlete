@@ -1,21 +1,15 @@
 import { Router } from "express";
-import * as athleteService from "../../core/athlete/athlete.service";
+import * as athleteServiceve from "../../core/athlete/athlete.service";
 import { toNumber } from "../../../utils/pagination-lookup.util";
 
 const router = Router();
 
-
 router.get("/", async (req, res, next) => {
   try {
-    const {
-      search,
-      page,
-      limit,
-      healthConditionIds,
-      includeHealthConditions,
-    } = req.query;
+    const { search, page, limit, healthConditionIds, includeHealthConditions } =
+      req.query;
 
-    const results = await athleteService.getAthletes({
+    const results = await athleteServiceve.getAthletes({
       search: search as string,
       page: toNumber(page),
       limit: toNumber(limit),
@@ -24,6 +18,9 @@ router.get("/", async (req, res, next) => {
         ? (healthConditionIds as string).split(",")
         : undefined,
       includeHealthConditions: includeHealthConditions === "true",
+      includePlatformLinks: false,
+      includeProviders: false,
+      syncStatus: ["completed", "failed"],
     });
 
     res.json({
@@ -38,7 +35,7 @@ router.get("/", async (req, res, next) => {
 
 router.get("/:id", async (req, res, next) => {
   try {
-    const athlete = await athleteService.getAthleteById(req.params.id);
+    const athlete = await athleteServiceve.getAthleteById(req.params.id);
     res.json({
       success: true,
       message: "Athlete fetched",
@@ -48,7 +45,5 @@ router.get("/:id", async (req, res, next) => {
     next(err);
   }
 });
-
-
 
 export default router;

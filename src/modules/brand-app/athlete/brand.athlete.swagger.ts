@@ -46,3 +46,30 @@ registry.registerPath({
     },
   },
 });
+
+registry.registerPath({
+  method: "get",
+  path: "/brand/athletes/{id}",
+  tags: ["Brand Athletes"],
+  summary: "Get athlete by id",
+  request: {
+    params: z.object({
+      id: z.string().uuid().describe("Athlete ID"),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Athlete fetched successfully",
+      content: {
+        "application/json": {
+          schema: successResponse(AthleteSchema),
+        },
+      },
+    },
+    404: { description: "Athlete not found" },
+    500: {
+      description: "Internal server error",
+      content: { "application/json": { schema: errorResponse } },
+    },
+  },
+});

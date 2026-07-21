@@ -15,6 +15,27 @@
       "when": 1784212372608,
       "tag": "0001_classy_liz_osborn",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784535356975,
+      "tag": "0002_large_ares",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1784535963993,
+      "tag": "0003_living_lionheart",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1784561401533,
+      "tag": "0004_light_captain_america",
+      "breakpoints": true
     }
   ]
 }

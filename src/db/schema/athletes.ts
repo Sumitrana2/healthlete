@@ -5,7 +5,8 @@ import {
   text,
   timestamp,
   index,
-  boolean
+  boolean,
+  jsonb
 } from "drizzle-orm/pg-core";
 export const athletes = pgTable(
   "athletes",
@@ -13,10 +14,15 @@ export const athletes = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     fullName: varchar("full_name", { length: 255 }).notNull(),
     slug: varchar("slug", { length: 255 }).notNull().unique(),
-    country: varchar("country", { length: 100 }),
-    description: text("description"),        
+    country: varchar("country", { length: 2 }),
+    languages: jsonb("languages"),
+    emails: jsonb("emails"),
+    description: text("description"),   
+    isDescriptionAdded: boolean("is_description_added").default(false).notNull(),     
     avatarUrl: text("avatar_url"),           
     isActive: boolean("is_active").default(true),
+    categories: jsonb("categories"),
+    gender: varchar("gender", { length: 20 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },

@@ -88,9 +88,10 @@ router.get("/", async (req, res, next) => {
       page,
       limit,
       isActive,
+      healthConditionIds,
+      includeHealthConditions,
       includePlatformLinks,
       includeProviders,
-      syncStatus,
     } = req.query;
 
     const results = await athleteService.getAthletes({
@@ -98,9 +99,12 @@ router.get("/", async (req, res, next) => {
       page: toNumber(page),
       limit: toNumber(limit),
       isActive: isActive !== undefined ? isActive === "true" : undefined,
+      healthConditionIds: healthConditionIds
+        ? (healthConditionIds as string).split(",")
+        : undefined,
+      includeHealthConditions: includeHealthConditions === "true",
       includePlatformLinks: includePlatformLinks === "true",
       includeProviders: includeProviders === "true",
-      syncStatus: syncStatus ? (syncStatus as string).split(",") : undefined,
     });
 
     res.json({ success: true, message: "Athletes fetched", data: results });
@@ -123,10 +127,13 @@ router.patch(
   validate(updateAthleteSchema, "body", true),
   async (req, res, next) => {
     try {
-      const result = await athleteService.updateAthlete(req.params.id, req.body);
+      const result = await athleteService.updateAthlete(
+        req.params.id,
+        req.body
+      );
       res.json({
         success: true,
-        message: `Athlete ${req.body.isActive ? "enabled" : "disabled"} successfully`,
+        message: "Athlete updated successfully",
         data: { result },
       });
     } catch (err) {
@@ -134,6 +141,7 @@ router.patch(
     }
   }
 );
+
 router.delete("/:id", async (req, res, next) => {
   try {
     await athleteService.deleteAthlete(req.params.id);
@@ -166,15 +174,13 @@ router.post(
   async (req, res, next) => {
     try {
       const { provider } = req.body;
-      const results = await athleteSyncService.syncAthleteData(req.params.id, provider);
-
-      const hasFailure = results.some((r) => r.status === "failed");
-
-      res.status(hasFailure ? 500 : 200).json({
-        success: !hasFailure,
-        message: hasFailure
-          ? "Sync completed with errors"
-          : "Athlete data sync completed successfully",
+      const results = await athleteSyncService.syncAthleteData(
+        req.params.id,
+        provider
+      );
+      res.json({
+        success: true,
+        message: "Athlete data sync completed",
         data: { results },
       });
     } catch (err) {

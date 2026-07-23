@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { jsonArray } from "../../../utils/zod.helpers";
 
 export const selectedPlatformSchema = z.object({
   platform: z.enum(["instagram", "youtube", "twitter"]),
@@ -7,7 +8,7 @@ export const selectedPlatformSchema = z.object({
   display_title: z.string().min(1, "Display title is required"),
   avatar_url: z.string().url("Avatar URL must be a valid URL"),
   subscribers_count: z.number().optional(),
-  is_verified: z.boolean(),
+  is_verified: z.boolean()
 });
 
 export const createAthleteBodySchema = z.object({
@@ -26,14 +27,18 @@ export const addPlatformBodySchema = z.object({
 
 export const addPlatformSchema = z.object({
   body: addPlatformBodySchema,
+  
 });
 
 export type CreateAthleteSchema = z.infer<typeof createAthleteSchema>;
 export type AddPlatformSchema = z.infer<typeof addPlatformSchema>;
 
-// ── Manual update — sirf isActive ─────────────────────────────────────────────
 export const updateAthleteBodySchema = z.object({
-  isActive: z.union([z.boolean(), z.string().transform((val) => val === "true")]),
+  description: z.string().optional().transform((val) => val || undefined),
+  healthConditionIds: jsonArray(z.string().uuid()),
+  isActive: z
+    .union([z.boolean(), z.string().transform((val) => val === "true")])
+    .optional(),
 });
 
 export const updateAthleteSchema = z.object({
@@ -42,7 +47,6 @@ export const updateAthleteSchema = z.object({
 
 export type UpdateAthleteSchema = z.infer<typeof updateAthleteSchema>;
 
-// ── Response Schema ──────────────────────────────────────────────────────────────
 export const AthleteSchema = z.object({
   id: z.string().uuid(),
   fullName: z.string(),
@@ -51,10 +55,6 @@ export const AthleteSchema = z.object({
   description: z.string().nullable(),
   avatarUrl: z.string().nullable(),
   isActive: z.boolean().nullable(),
-  languages: z.array(z.string()).nullable().optional(),
-  categories: z.array(z.string()).nullable().optional(),
-  healthConditions: z.array(z.string()).nullable().optional(),
-  gender: z.string().nullable().optional(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
   platformLinks: z
@@ -71,12 +71,22 @@ export const AthleteSchema = z.object({
       })
     )
     .optional(),
+  healthConditions: z
+    .array(
+      z.object({
+        id: z.string().uuid(),
+        healthCondition: z.object({
+          id: z.string().uuid(),
+          name: z.string(),
+        }),
+      })
+    )
+    .optional(),
 });
 
 export const syncDataBodySchema = z.object({
   provider: z.enum(["hyperauditor"]).default("hyperauditor"),
 });
-
 export const syncAthleteDataSchema = z.object({
   body: syncDataBodySchema,
 });

@@ -7,6 +7,7 @@ import adminLookupChannelsRoutes from '../../modules/admin-app/lookup/channels/a
 import adminLookupLanguagesRoutes from '../../modules/admin-app/lookup/languages/admin.languages.routes';
 import adminLookupIndustriesRoutes from '../../modules/admin-app/lookup/industries/admin.industries.routes';
 import adminAthleteRoutes from '../../modules/admin-app/athlete/admin.athlete.routes';
+import adminBrandRoutes from '../../modules/admin-app/brands/admin.brand.routes';
 
 
 import { adminAuthenticate } from "../../middleware/adminAuthenticate";
@@ -26,5 +27,8 @@ router.use('/lookup/industries',adminAuthenticate, adminLookupIndustriesRoutes);
 
 // athlete
 router.use('/athletes', adminAuthenticate,adminAthleteRoutes);
+
+// brands
+router.use('/brands', adminAuthenticate,adminBrandRoutes);
 
 export default router;

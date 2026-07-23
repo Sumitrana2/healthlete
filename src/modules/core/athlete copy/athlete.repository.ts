@@ -3,6 +3,7 @@ import {
   athletes,
   athleteProviders,
   athletePlatformLinks,
+  athleteHealthConditions,
 } from "../../../db/schema";
 import { eq, ilike, and, inArray, count, exists } from "drizzle-orm";
 import { makeUniqueSlug } from "../../../utils/slug";
@@ -15,8 +16,6 @@ import type {
   SyncStatus,
   UpdateAthleteDto,
 } from "./athlete.types";
-
-// ── Duplicacy Check ──────────────────────────────────────────────────────────────
 
 export async function findExistingPlatformLink(
   provider: string,
@@ -46,8 +45,6 @@ export async function findAthletePlatformLink(
     ),
   });
 }
-
-// ── Create / Sync ──────────────────────────────────────────────────────────────
 
 export async function insertAthleteForSync(data: {
   fullName: string;
@@ -118,11 +115,10 @@ export async function findAthleteWithRelations(athleteId: string) {
     where: eq(athletes.id, athleteId),
     with: {
       platformLinks: true,
+      healthConditions: { with: { healthCondition: true } },
     },
   });
 }
-
-// ── Search ──────────────────────────────────────────────────────────────────────
 
 export async function searchExistingAthletes(name: string) {
   const matchedAthleteIds = await db
@@ -155,8 +151,6 @@ export async function searchExistingAthletes(name: string) {
   });
 }
 
-// ── Find ──────────────────────────────────────────────────────────────────────────
-
 export async function findAthleteById(id: string) {
   return db.query.athletes.findFirst({
     where: eq(athletes.id, id),
@@ -165,11 +159,12 @@ export async function findAthleteById(id: string) {
         columns: { rawData: false },
       },
       providers: true,
+      healthConditions: { with: { healthCondition: true } },
     },
   });
 }
 
-function buildWhereConditions(filters: AthleteFilters) {
+function buildWhereConditions(filters: AthleteFilters, athleteIds?: string[]) {
   const conditions = [];
 
   if (filters.search) {
@@ -178,6 +173,10 @@ function buildWhereConditions(filters: AthleteFilters) {
   if (filters.isActive !== undefined) {
     conditions.push(eq(athletes.isActive, filters.isActive));
   }
+  if (athleteIds?.length) {
+    conditions.push(inArray(athletes.id, athleteIds));
+  }
+
   if (filters.syncStatus?.length) {
     conditions.push(
       exists(
@@ -197,6 +196,17 @@ function buildWhereConditions(filters: AthleteFilters) {
   return conditions.length ? and(...conditions) : undefined;
 }
 
+async function getAthleteIds(healthConditionIds: string[]) {
+  const rows = await db
+    .selectDistinct({ athleteId: athleteHealthConditions.athleteId })
+    .from(athleteHealthConditions)
+    .where(
+      inArray(athleteHealthConditions.healthConditionId, healthConditionIds)
+    );
+
+  return rows.map((r) => r.athleteId);
+}
+
 async function getData(
   filters: AthleteFilters & { page: number; limit: number },
   where: ReturnType<typeof buildWhereConditions>
@@ -207,12 +217,9 @@ async function getData(
     offset: (filters.page - 1) * filters.limit,
     orderBy: (athletes, { desc }) => [desc(athletes.createdAt)],
     with: {
-      ...(filters.includePlatformLinks
-        ? {
-            platformLinks: {
-              columns: { rawData: false },
-            },
-          }
+      ...(filters.includePlatformLinks ? { platformLinks: true } : {}),
+      ...(filters.includeHealthConditions
+        ? { healthConditions: { with: { healthCondition: true } } }
         : {}),
       ...(filters.includeProviders ? { providers: true } : {}),
     },
@@ -230,7 +237,22 @@ async function getCount(
 }
 
 export async function findAthletes(filters: AthleteFilters) {
-  const where = buildWhereConditions(filters);
+  let extraIds: string[] | undefined;
+
+  if (filters.healthConditionIds?.length) {
+    extraIds = await getAthleteIds(filters.healthConditionIds);
+    if (!extraIds.length) {
+      return {
+        items: [],
+        total: 0,
+        page: filters.page ?? 1,
+        limit: filters.limit ?? 10,
+        totalPages: 0,
+      };
+    }
+  }
+
+  const where = buildWhereConditions(filters, extraIds);
 
   return paginate(
     filters,
@@ -239,12 +261,14 @@ export async function findAthletes(filters: AthleteFilters) {
   );
 }
 
-// ── Update (manual — sirf isActive) ────────────────────────────────────────────
-
 export async function updateAthleteById(id: string, data: UpdateAthleteDto) {
   const [updated] = await db
     .update(athletes)
     .set({
+      ...(data.description !== undefined && { description: data.description }),
+      ...(data.isDescriptionAdded !== undefined && {
+        isDescriptionAdded: data.isDescriptionAdded,
+      }),
       ...(data.isActive !== undefined && { isActive: data.isActive }),
       updatedAt: new Date(),
     })
@@ -254,8 +278,23 @@ export async function updateAthleteById(id: string, data: UpdateAthleteDto) {
   return updated;
 }
 
-// ── Delete ──────────────────────────────────────────────────────────────────────
+export async function replaceAthleteHealthConditions(
+  athleteId: string,
+  healthConditionIds: string[]
+) {
+  await db
+    .delete(athleteHealthConditions)
+    .where(eq(athleteHealthConditions.athleteId, athleteId));
 
+  if (healthConditionIds.length) {
+    await db.insert(athleteHealthConditions).values(
+      healthConditionIds.map((id) => ({
+        athleteId,
+        healthConditionId: id,
+      }))
+    );
+  }
+}
 export async function deleteAthleteById(id: string) {
   await db.delete(athletes).where(eq(athletes.id, id));
 }
@@ -269,8 +308,6 @@ export async function findPlatformLinkById(id: string) {
 export async function deletePlatformLinkById(id: string) {
   await db.delete(athletePlatformLinks).where(eq(athletePlatformLinks.id, id));
 }
-
-// ── Sync ──────────────────────────────────────────────────────────────────────────
 
 export async function findAllPlatformLinksForAthleteByProvider(
   athleteId: string,
@@ -312,14 +349,10 @@ export async function updateAthleteAggregatedFields(
         isDescriptionAdded: data.isDescriptionAdded,
       }),
       ...(data.country !== undefined && { country: data.country }),
-      ...(data.countryName !== undefined && { countryName: data.countryName }),
       ...(data.gender !== undefined && { gender: data.gender }),
       ...(data.languages !== undefined && { languages: data.languages }),
       ...(data.emails !== undefined && { emails: data.emails }),
       ...(data.categories !== undefined && { categories: data.categories }),
-      ...(data.healthConditions !== undefined && {
-        healthConditions: data.healthConditions,
-      }),
       updatedAt: new Date(),
       isActive: true,
     })

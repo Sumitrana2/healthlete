@@ -6,7 +6,7 @@ const router = Router();
 
 router.get("/", async (req, res, next) => {
   try {
-    const { search, page, limit, healthConditionIds, includeHealthConditions } =
+    const { search, page, limit} =
       req.query;
 
     const results = await athleteServiceve.getAthletes({
@@ -14,10 +14,6 @@ router.get("/", async (req, res, next) => {
       page: toNumber(page),
       limit: toNumber(limit),
       isActive: true,
-      healthConditionIds: healthConditionIds
-        ? (healthConditionIds as string).split(",")
-        : undefined,
-      includeHealthConditions: includeHealthConditions === "true",
       includePlatformLinks: false,
       includeProviders: false,
       syncStatus: ["completed", "failed"],

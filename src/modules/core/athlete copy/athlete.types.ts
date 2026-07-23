@@ -37,16 +37,20 @@ export type AthleteField =
 export interface AthleteFilters {
   search?: string;
   isActive?: boolean;
+  healthConditionIds?: string[];
   page?: number;
   limit?: number;
   fields?: AthleteField[];
+  includeHealthConditions?: boolean;
   includePlatformLinks?: boolean;
   includeProviders?: boolean;
   syncStatus?: string[];
 }
 
-// ── Manual admin update — sirf isActive ─────────────────────────────────────────
 export interface UpdateAthleteDto {
+  description?: string;
+  healthConditionIds?: string[];
+  isDescriptionAdded?: boolean;
   isActive?: boolean;
 }
 
@@ -66,18 +70,14 @@ export interface AthletePlatformLink {
   rawData: unknown;
   lastSyncedAt: Date | null;
 }
-
-// ── AI + sync se aggregate hone wale fields ─────────────────────────────────────
 export interface AthleteAggregatedFields {
   description?: string | null;
   isDescriptionAdded?: boolean;
   country?: string | null;
-  countryName?: string | null; 
   gender?: string | null;
   languages?: string[];
   emails?: string[];
   categories?: string[];
-  healthConditions?: string[];  
 }
 
 export interface PlatformSyncUpdate {
@@ -86,22 +86,4 @@ export interface PlatformSyncUpdate {
   reportState: "ready" | "failed" | "syncing";
   lastSyncedAt: Date;
 }
-
 export type SyncStatus = "pending" | "syncing" | "failed" | "completed";
-
-// ── AI enrichment types ──────────────────────────────────────────────────────────
-export interface AIEnrichmentInput {
-  fullName: string;
-  // bios: string[];
-  usernames: string[];
-}
-
-export interface AIEnrichmentResult {
-  country?: string | null;
-  countryName?: string | null; 
-  description?: string | null;
-  languages?: string[];
-  categories?: string[];
-  gender?: string | null;
-  healthConditions?: string[];
-}

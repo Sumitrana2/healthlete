@@ -252,7 +252,7 @@ registry.registerPath({
   method: "patch",
   path: "/admin/athletes/{id}",
   tags: ["Admin Athletes"],
-  summary: "Enable or disable an athlete",
+  summary: "Update athlete's description, health conditions, or active status",
   request: {
     params: z.object({
       id: z.string().uuid().describe("Athlete ID"),

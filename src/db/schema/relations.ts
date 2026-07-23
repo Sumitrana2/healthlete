@@ -12,6 +12,7 @@ import {
   campaignObjectives,
   preferredChannels,
   athleteLanguages,
+  companySizes,
 } from "./brands";
 import { platformTaxonomy, brandTaxonomySelections } from "./taxonomy";
 import {
@@ -73,6 +74,10 @@ export const companiesRelations = relations(companies, ({ one, many }) => ({
     references: [industries.id],
   }),
   brands: many(brands),
+  companySize: one(companySizes, {
+    fields: [companies.companySizeId],
+    references: [companySizes.id],
+  }),
 }));
 
 export const brandHealthConditionsRelations = relations(

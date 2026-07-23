@@ -14,11 +14,17 @@ import '../../modules/brand-app/lookup/industries/brand.industries.swagger';
 import '../../modules/brand-app/athlete/brand.athlete.swagger';
 
 
+
+
+
 // admin
 import '../../modules/admin-app/auth/admin.auth.swagger';
 
 // admin athlete
 import '../../modules/admin-app/athlete/admin.athlete.swagger';
+
+// admin brands
+import '../../modules/admin-app/brands/admin.brand.swagger';
 
 // admin/lookups
 import '../../modules/admin-app/lookup/company/admin.company.swagger';

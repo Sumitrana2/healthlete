@@ -20,14 +20,6 @@ registry.registerPath({
   request: {
     query: z.object({
       search: z.string().optional().describe("Search by first or last name"),
-      healthConditionIds: z
-        .string()
-        .optional()
-        .describe("Comma separated health condition UUIDs"),
-      includeHealthConditions: z
-        .enum(["true", "false"])
-        .optional()
-        .describe("Include health conditions in response"),
       ...paginationQuery.shape,
     }),
   },

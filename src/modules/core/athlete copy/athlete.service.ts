@@ -10,10 +10,13 @@ import type {
 import * as hyperAuditorClient from "../hyperauditor/hyperauditor.client";
 
 export async function searchAthletes(query: string) {
-  return hyperAuditorClient.searchAthletes(query);
+  const results = await hyperAuditorClient.searchAthletes(query);
+  return results;
 }
 
-export async function createAthleteWithPlatform(data: CreateAthleteWithPlatformDto) {
+export async function createAthleteWithPlatform(
+  data: CreateAthleteWithPlatformDto
+) {
   const { provider, platform } = data;
 
   const existingLink = await repository.findExistingPlatformLink(
@@ -28,8 +31,9 @@ export async function createAthleteWithPlatform(data: CreateAthleteWithPlatformD
       `This ${platform.platform} profile (${platform.username}) is already linked to athlete "${existingLink.athlete.fullName}"`
     );
   }
-
-  const similarAthletes = await repository.searchExistingAthletes(platform.display_title);
+  const similarAthletes = await repository.searchExistingAthletes(
+    platform.display_title
+  );
 
   if (similarAthletes.length > 0 && !data.forceCreate) {
     return {
@@ -42,7 +46,6 @@ export async function createAthleteWithPlatform(data: CreateAthleteWithPlatformD
       athlete: null,
     };
   }
-
   const athlete = await repository.insertAthleteForSync({
     fullName: platform.display_title,
     avatarUrl: platform.avatar_url ?? null,
@@ -80,9 +83,15 @@ export async function addPlatformToAthlete(data: AddPlatformDto) {
     );
   }
 
-  const alreadyLinked = await repository.findAthletePlatformLink(athleteId, platform.platform);
+  const alreadyLinked = await repository.findAthletePlatformLink(
+    athleteId,
+    platform.platform
+  );
   if (alreadyLinked) {
-    throw new AppError(400, `Athlete already has a ${platform.platform} profile linked`);
+    throw new AppError(
+      400,
+      `Athlete already has a ${platform.platform} profile linked`
+    );
   }
 
   await repository.upsertAthleteProvider(athleteId, provider);
@@ -108,12 +117,21 @@ export async function getAthleteById(id: string) {
   return athlete;
 }
 
-// ── Manual update — sirf enable/disable ──────────────────────────────────────────
 export async function updateAthlete(id: string, data: UpdateAthleteDto) {
   const existing = await repository.findAthleteById(id);
   if (!existing) throw new AppError(404, "Athlete not found");
 
-  await repository.updateAthleteById(id, data);
+  await repository.updateAthleteById(id, {
+    ...data,
+    ...(data.description !== undefined && { isDescriptionAdded: true }),
+  });
+
+  if (data.healthConditionIds !== undefined) {
+    await repository.replaceAthleteHealthConditions(
+      id,
+      data.healthConditionIds
+    );
+  }
 
   const result = await repository.findAthleteById(id);
   if (!result) throw new AppError(500, "Athlete not found after update");

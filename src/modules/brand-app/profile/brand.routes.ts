@@ -26,7 +26,6 @@ router.get("/me", async (req, res, next) => {
   }
 });
 
-export default router;
 
 router.post("/company", validate(addCompanySchema), async (req, res, next) => {
   try {
@@ -105,3 +104,5 @@ router.post(
     }
   }
 );
+
+export default router;

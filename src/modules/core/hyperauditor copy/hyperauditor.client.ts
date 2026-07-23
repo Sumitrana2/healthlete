@@ -2,31 +2,58 @@ import { AppError } from "../../../middleware/errorHandler";
 
 const BASE_URL = "https://hypeauditor.com/api/method";
 export interface NormalizedReportData {
+  country?: string | null;
+  description?: string;
+  languages?: string[];
+  gender?: string | null;
   profile_url?: string;
+  emails?: string[];
+  category?: string[];
   world_ranking?: number | null;
   raw: unknown;
 }
 
+
+
 function normalizeInstagram(raw: any): NormalizedReportData {
   return {
-    profile_url: "https://www.instagram.com/" + raw?.user?.username,
-    world_ranking: raw?.user?.blogger_rankings?.worldwide?.rank ?? null,
+    country: raw?.user?.blogger_geo?.country ?? null,        
+    description: raw?.user?.about ?? null,        
+    languages: raw?.user?.blogger_languages ?? [],
+    gender: raw?.user?.blogger_gender ?? null,
+    emails: raw?.user?.emails ?? [],
+    category: raw?.user?.advertising_data?.brands_categories ?? [],
+    world_ranking: raw?.user?.blogger_rankings.worldwide.rank ?? null,
+    profile_url: "https://www.instagram.com/"+raw?.user?.username,
     raw,
   };
 }
 
+
 function normalizeYoutube(raw: any): NormalizedReportData {
   return {
-    profile_url: "https://www.youtube.com/@" + raw?.report?.basic?.username,
-    world_ranking: raw?.report?.features?.blogger_rankings?.data?.worldwide?.rank ?? null,
+    country: raw?.report?.features?.blogger_geo?.data?.country ?? null,  
+    description: raw?.report?.basic?.description ?? null,               
+    profile_url: "https://www.youtube.com/@"+raw?.report?.basic?.username,               
+    languages: raw?.report?.features?.blogger_languages?.data ?? null,
+    gender: raw?.report?.gender ?? null,
+    emails: raw?.report?.features?.blogger_emails?.data ?? [],
+    category: raw?.report?.category_name ?? [],
+    world_ranking: raw?.report?.features?.blogger_rankings?.data?.worldwide?.rank?? null,
     raw,
   };
 }
 
 function normalizeTwitter(raw: any): NormalizedReportData {
   return {
-    profile_url: "https://x.com/" + raw?.report?.basic?.username,
-    world_ranking: raw?.report?.features?.blogger_rankings?.data?.worldwide?.rank ?? null,
+    country: raw?.report?.features?.blogger_geo?.data?.country ?? null,  
+    description: raw?.report?.basic?.description ?? null,
+    profile_url: "https://x.com/"+raw?.report?.basic?.username,               
+    languages: raw?.report?.features?.blogger_languages?.data ?? null,
+    gender: raw?.report?.gender ?? null,
+    emails: raw?.report?.features?.blogger_emails?.data ?? [],
+    category: raw?.report?.features?.blogger_rankings?.data?.category?.category?.title ?? [],
+    world_ranking: raw?.report?.features?.blogger_rankings?.data?.worldwide?.rank?? null,
     raw,
   };
 }

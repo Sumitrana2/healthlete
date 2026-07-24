@@ -3,6 +3,9 @@ import {
   athletes,
   athleteProviders,
   athletePlatformLinks,
+  athleteMedia,
+  athleteFinalScores,
+  athleteResonanceScores,
 } from "../../../db/schema";
 import { eq, ilike, and, inArray, count, exists } from "drizzle-orm";
 import { makeUniqueSlug } from "../../../utils/slug";
@@ -15,6 +18,7 @@ import type {
   SyncStatus,
   UpdateAthleteDto,
 } from "./athlete.types";
+import { NormalizedMediaItem } from "./media-normalizer";
 
 // ── Duplicacy Check ──────────────────────────────────────────────────────────────
 
@@ -165,6 +169,7 @@ export async function findAthleteById(id: string) {
         columns: { rawData: false },
       },
       providers: true,
+      finalScore:true
     },
   });
 }
@@ -215,6 +220,7 @@ async function getData(
           }
         : {}),
       ...(filters.includeProviders ? { providers: true } : {}),
+      finalScore:true
     },
   });
 }
@@ -324,4 +330,115 @@ export async function updateAthleteAggregatedFields(
       isActive: true,
     })
     .where(eq(athletes.id, athleteId));
+}
+
+export async function upsertAthleteMedia(
+  platformLinkId: string,
+  items: NormalizedMediaItem[]
+) {
+  for (const item of items) {
+    await db
+      .insert(athleteMedia)
+      .values({
+        platformLinkId,
+        externalMediaId: item.externalMediaId,
+        mediaType: item.mediaType,
+        caption: item.caption,
+        thumbnailUrl: item.thumbnailUrl,
+        postedAt: item.postedAt,
+        likesCount: item.likesCount,
+        commentsCount: item.commentsCount,
+        viewsCount: item.viewsCount,
+        engagementRate: item.engagementRate as any,
+        hashtags: item.hashtags,
+        rawData: item.rawData,
+      })
+      .onConflictDoUpdate({
+        target: [athleteMedia.platformLinkId, athleteMedia.externalMediaId],
+        set: {
+          caption: item.caption,
+          likesCount: item.likesCount,
+          commentsCount: item.commentsCount,
+          viewsCount: item.viewsCount,
+          engagementRate: item.engagementRate as any,
+          hashtags: item.hashtags,
+          rawData: item.rawData,
+          updatedAt: new Date(),
+        },
+      });
+  }
+}
+
+export async function findMediaByPlatformLinkIds(platformLinkIds: string[]) {
+  if (!platformLinkIds.length) return [];
+  return db.query.athleteMedia.findMany({
+    where: inArray(athleteMedia.platformLinkId, platformLinkIds),
+    orderBy: (media, { desc }) => [desc(media.postedAt)],
+  });
+}
+
+export async function getResonanceSummary(athleteId: string) {
+  const scores = await db.query.athleteResonanceScores.findMany({
+    where: eq(athleteResonanceScores.athleteId, athleteId),
+    with: {
+      resonanceCondition: {
+        columns: { id: true, name: true },
+      },
+    },
+    orderBy: (s, { desc }) => [desc(s.score)],
+  });
+
+  if (!scores.length) {
+    return { averageScore: 0, maxScore: 0, maxCondition: null, breakdown: [] };
+  }
+
+  const totalScore = scores.reduce((sum, s) => sum + s.score, 0);
+  const averageScore = Math.round(totalScore / scores.length);
+  const topScore = scores[0];
+
+  return {
+    averageScore,
+    maxScore: topScore.score,
+    maxCondition: topScore.resonanceCondition?.name ?? null,
+    breakdown: scores.map((s) => ({
+      condition: s.resonanceCondition?.name,
+      score: s.score,
+    })),
+  };
+}
+
+
+export async function upsertAthleteFinalScore(
+  athleteId: string,
+  data: {
+    resonanceScore?: number;
+    credibilityScore?: number;
+    audienceTrustScore?: number;
+    conditionAlignmentScore?: number;
+    healthleteMatchScore?: number;
+    weightDistribution?: unknown;
+    scoreBreakdown?: unknown;
+  }
+) {
+  await db
+    .insert(athleteFinalScores)
+    .values({
+      athleteId,
+      ...data,
+      calculatedAt: new Date(),
+    } as any)
+    .onConflictDoUpdate({
+      target: athleteFinalScores.athleteId,
+      set: {
+        ...data,
+        calculatedAt: new Date(),
+        updatedAt: new Date(),
+      } as any,
+    });
+}
+
+export async function findAthleteFinalScore(athleteId: string) {
+  return db.query.athleteFinalScores.findFirst({
+    where: eq(athleteFinalScores.athleteId, athleteId),
+  });
 }

@@ -97,3 +97,10 @@ export async function fetchTwitterReport(channel: string): Promise<NormalizedRep
   const raw = await callHyperAuditor(url);
   return normalizeTwitter(raw);
 }
+
+
+export async function fetchInstagramMediaReport(username: string): Promise<any> {
+  const url = new URL(`${BASE_URL}/auditor.reportMedia/`);
+  url.searchParams.set("username", username);
+  return callHyperAuditor(url);
+}

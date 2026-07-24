@@ -43,6 +43,27 @@
       "when": 1784716460841,
       "tag": "0005_small_bloodstorm",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1784799860290,
+      "tag": "0006_salty_blackheart",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1784812737438,
+      "tag": "0007_fair_firelord",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1784816834642,
+      "tag": "0008_blushing_wallop",
+      "breakpoints": true
     }
   ]
 }

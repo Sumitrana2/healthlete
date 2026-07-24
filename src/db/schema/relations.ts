@@ -36,6 +36,8 @@ import {
 } from "./admin-auth";
 import { athleteProviders } from "./athlete-providers";
 import { athleteHealthConditions } from "./athlete-health-conditions";
+import { athleteResonanceScores } from "./athlete-resonance-scores";
+import { resonanceConditions } from "./resonance-conditions";
 
 // ── Brands ────────────────────────────────────────────────────────────────────
 // export const brandsRelations = relations(brands, ({ many }) => ({
@@ -259,6 +261,19 @@ export const athleteFinalScoresRelations = relations(
     athlete: one(athletes, {
       fields: [athleteFinalScores.athleteId],
       references: [athletes.id],
+    }),
+  })
+);
+export const athleteResonanceScoresRelations = relations(
+  athleteResonanceScores,
+  ({ one }) => ({
+    athlete: one(athletes, {
+      fields: [athleteResonanceScores.athleteId],
+      references: [athletes.id],
+    }),
+    resonanceCondition: one(resonanceConditions, {
+      fields: [athleteResonanceScores.resonanceConditionId],
+      references: [resonanceConditions.id],
     }),
   })
 );

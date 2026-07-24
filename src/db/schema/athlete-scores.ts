@@ -11,7 +11,7 @@ import {
 import { athletes } from "./athletes";
 
 export const athleteFinalScores = pgTable(
-  "athlete_final_scores",
+  "athlete_scores",
   {
     id: uuid("id").primaryKey().defaultRandom(),
 
@@ -19,14 +19,23 @@ export const athleteFinalScores = pgTable(
       .notNull()
       .references(() => athletes.id, { onDelete: "cascade" }),
 
-    resonanceScore: decimal("resonance_score", { precision: 5, scale: 2 }),   
+    resonanceScore: decimal("resonance_score", { precision: 5, scale: 2 }), 
     credibilityScore: decimal("credibility_score", { precision: 5, scale: 2 }),
-    audienceTrustScore: decimal("audience_trust_score", { precision: 5, scale: 2 }),
-    conditionAlignmentScore: decimal("condition_alignment_score", { precision: 5, scale: 2 }),
-    healthleteMatchScore: decimal("healthlete_match_score", { precision: 5, scale: 2 }),
+    audienceTrustScore: decimal("audience_trust_score", {
+      precision: 5,
+      scale: 2,
+    }),
+    conditionAlignmentScore: decimal("condition_alignment_score", {
+      precision: 5,
+      scale: 2,
+    }),
+    healthleteMatchScore: decimal("healthlete_match_score", {
+      precision: 5,
+      scale: 2,
+    }),
 
-    weightDistribution: jsonb("weight_distribution"),  
-    scoreBreakdown: jsonb("score_breakdown"),        
+    weightDistribution: jsonb("weight_distribution"),
+    scoreBreakdown: jsonb("score_breakdown"),
 
     calculatedAt: timestamp("calculated_at").defaultNow().notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),

@@ -442,3 +442,9 @@ export async function findAthleteFinalScore(athleteId: string) {
     where: eq(athleteFinalScores.athleteId, athleteId),
   });
 }
+
+export async function deleteAthleteResonanceScores(athleteId: string) {
+  await db
+    .delete(athleteResonanceScores)
+    .where(eq(athleteResonanceScores.athleteId, athleteId));
+}

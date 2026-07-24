@@ -30,14 +30,6 @@ export interface ResonanceResult {
     return text.toLowerCase().trim();
   }
   
-  // function countMatches(text: string, keywords: string[]): number {
-  //   const normalized = normalizeText(text);
-  //   return keywords.reduce((count, keyword) => {
-  //     const regex = new RegExp(keyword.toLowerCase(), "g");
-  //     const matches = normalized.match(regex);
-  //     return count + (matches?.length ?? 0);
-  //   }, 0);
-  // }
   function countMatches(text: string, keywords: string[]): number {
     const normalized = normalizeText(text);
   

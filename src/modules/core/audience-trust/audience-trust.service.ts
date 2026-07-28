@@ -9,23 +9,27 @@ import type { PlatformAudienceTrustResult } from "./audience-trust.types";
 export function calculateAudienceTrustForPlatform(
   platform: string,
   rawData: any,
-  targetLanguages?: string[]
 ): PlatformAudienceTrustResult | null {
   switch (platform) {
     case "instagram": {
-      const result = calculateInstagramAudienceTrust(rawData, AUDIENCE_TRUST_WEIGHTS.instagram);
+      const result = calculateInstagramAudienceTrust(
+        rawData,
+        AUDIENCE_TRUST_WEIGHTS.instagram
+      );
       return { platform, score: result.score, breakdown: result.breakdown };
     }
     case "youtube": {
       const result = calculateYoutubeAudienceTrust(
-        rawData,
         AUDIENCE_TRUST_WEIGHTS.youtube,
-        targetLanguages
+        rawData
       );
       return { platform, score: result.score, breakdown: result.breakdown };
     }
     case "twitter": {
-      const result = calculateTwitterAudienceTrust(rawData, AUDIENCE_TRUST_WEIGHTS.twitter);
+      const result = calculateTwitterAudienceTrust(
+        rawData,
+        AUDIENCE_TRUST_WEIGHTS.twitter
+      );
       return { platform, score: result.score, breakdown: result.breakdown };
     }
     default:

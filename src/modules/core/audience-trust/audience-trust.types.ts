@@ -7,7 +7,7 @@ export interface AudienceTrustWeights {
       brandSafety: number;
     };
     youtube: {
-      languageConcentration: number;
+     audienceQuality: number;
       reachQuality: number;
       brandSafety: number;
     };

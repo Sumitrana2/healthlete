@@ -161,19 +161,37 @@ export async function searchExistingAthletes(name: string) {
 
 // ── Find ──────────────────────────────────────────────────────────────────────────
 
-export async function findAthleteById(id: string) {
+// export async function findAthleteById(id: string) {
+//   return db.query.athletes.findFirst({
+//     where: eq(athletes.id, id),
+//     with: {
+//       platformLinks: {
+//         columns: { rawData: false },
+//       },
+//       providers: true,
+//       finalScore:true
+//     },
+//   });
+// }
+export async function findAthleteById(
+  id: string,
+  rawData: boolean = false
+) {
   return db.query.athletes.findFirst({
     where: eq(athletes.id, id),
     with: {
-      platformLinks: {
-        columns: { rawData: false },
-      },
+      platformLinks: rawData
+        ? {} // Select all columns, including rawData
+        : {
+            columns: {
+              rawData: false, // Exclude rawData
+            },
+          },
       providers: true,
-      finalScore:true
+      finalScore: true,
     },
   });
 }
-
 function buildWhereConditions(filters: AthleteFilters) {
   const conditions = [];
 

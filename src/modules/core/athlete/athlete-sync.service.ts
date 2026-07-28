@@ -23,10 +23,10 @@ import {
   calculateAudienceTrustForPlatform,
   calculateOverallAudienceTrust,
 } from "../audience-trust/audience-trust.service";
-import {
-  calculateConditionAlignmentForPlatform,
-  calculateOverallConditionAlignment,
-} from "../condition-alignment/condition-alignment.service";
+// import {
+//   calculateConditionAlignmentForPlatform,
+//   calculateOverallConditionAlignment,
+// } from "../condition-alignment/condition-alignment.service";
 
 // export async function syncAthleteData(athleteId: string, provider: string) {
 //   const athlete = await repository.findAthleteById(athleteId);
@@ -623,250 +623,236 @@ export async function syncAthleteData(athleteId: string, provider: string) {
     let conditionAlignmentScoreForFinal = 0;
     let conditionAlignmentBreakdownForFinal: any = null;
 
-    try {
-      // const brandProfile = await repository.findBrandProfile(brandId);
-      // const brandProfile = {
-      //   categories: [1041, 1003],
-      //   keywords: ["breast cancer", "survivor", "recovery"],
-      //   interests: ["health", "wellness", "fitness"],
-      // };
+    // try {
+    //   // const brandProfile = await repository.findBrandProfile(brandId);
+    //   // const brandProfile = {
+    //   //   categories: [1041, 1003],
+    //   //   keywords: ["breast cancer", "survivor", "recovery"],
+    //   //   interests: ["health", "wellness", "fitness"],
+    //   // };
 
-      const brandProfile = {
-        categories: [
-          // Health Conditions
-          1001, 1002, 1003, 1004, 1005,
-          1006, 1007, 1008, 1009, 1010,
-          1011, 1012, 1013, 1014, 1015,
-          1016, 1017, 1018, 1019, 1020,
-          1021, 1022, 1023, 1024, 1025,
-          1026, 1027, 1028, 1029, 1030,
+    //   const brandProfile = {
+    //     categories: [
+    //       // Health Conditions
+    //       1001, 1002, 1003, 1004, 1005,
+    //       1006, 1007, 1008, 1009, 1010,
+    //       1011, 1012, 1013, 1014, 1015,
+    //       1016, 1017, 1018, 1019, 1020,
+    //       1021, 1022, 1023, 1024, 1025,
+    //       1026, 1027, 1028, 1029, 1030,
         
-          2001, 2002, 2003, 2004, 2005,
-          2006, 2007, 2008, 2009, 2010,
-          2011, 2012, 2013, 2014, 2015,
-          2016,
+    //       2001, 2002, 2003, 2004, 2005,
+    //       2006, 2007, 2008, 2009, 2010,
+    //       2011, 2012, 2013, 2014, 2015,
+    //       2016,
         
-          3001, 3002, 3003, 3004, 3005,
-          3006, 3007, 3008, 3009, 3010,
-          3011, 3012, 3013, 3014, 3015
-        ],
-        keywords: [
-          "breast cancer",
-          "cancer survivor",
-          "chemotherapy",
-          "oncology",
-          "mental health",
-          "depression",
-          "anxiety",
-          "ptsd",
-          "diabetes",
-          "type 1 diabetes",
-          "type 2 diabetes",
-          "heart disease",
-          "cardiac arrest",
-          "stroke",
-          "epilepsy",
-          "autism",
-          "adhd",
-          "multiple sclerosis",
-          "parkinson's disease",
-          "als",
-          "lupus",
-          "crohn's disease",
-          "colitis",
-          "arthritis",
-          "fibromyalgia",
-          "endometriosis",
-          "migraine",
-          "chronic pain",
-          "chronic illness",
-          "rare disease",
-          "organ donation",
-          "kidney disease",
-          "liver disease",
-          "lung disease",
-          "covid survivor",
-          "long covid",
-          "brain injury",
-          "spinal cord injury",
-          "amputee",
-          "prosthetic",
-          "disability",
-          "wheelchair athlete",
-          "blind athlete",
-          "deaf athlete",
-          "adaptive sports",
-          "recovery",
-          "rehabilitation",
-          "physical therapy",
-          "wellness",
-          "fitness",
-          "healthy lifestyle",
-          "nutrition",
-          "diet",
-          "protein",
-          "gym",
-          "strength training",
-          "weightlifting",
-          "crossfit",
-          "running",
-          "marathon",
-          "cycling",
-          "triathlon",
-          "yoga",
-          "pilates",
-          "meditation",
-          "mindfulness",
-          "sleep",
-          "hydration",
-          "performance",
-          "sports medicine",
-          "injury prevention",
-          "motivation",
-          "inspiration",
-          "resilience",
-          "perseverance",
-          "health advocate",
-          "patient advocate",
-          "public speaker",
-          "charity",
-          "nonprofit",
-          "fundraising",
-          "community",
-          "family",
-          "parenting",
-          "veteran",
-          "military",
-          "education",
-          "awareness",
-          "fundraiser",
-          "inclusion",
-          "diversity",
-          "empowerment",
-          "women's health",
-          "men's health",
-          "children's health",
-          "caregiver",
-          "mental wellness",
-          "positive mindset",
-          "hope",
-          "survivor story",
-          "life after cancer",
-          "health campaign"
-        ],
-        interests: [
-          "health",
-          "wellness",
-          "fitness",
-          "sports",
-          "nutrition",
-          "running",
-          "cycling",
-          "weightlifting",
-          "crossfit",
-          "basketball",
-          "football",
-          "baseball",
-          "soccer",
-          "tennis",
-          "golf",
-          "swimming",
-          "triathlon",
-          "marathon",
-          "olympics",
-          "adaptive sports",
-          "mental health",
-          "public health",
-          "health advocacy",
-          "patient advocacy",
-          "medical research",
-          "charity",
-          "fundraising",
-          "volunteering",
-          "community service",
-          "motivation",
-          "personal development",
-          "mindfulness",
-          "meditation",
-          "yoga",
-          "healthy eating",
-          "meal prep",
-          "supplements",
-          "biohacking",
-          "longevity",
-          "recovery",
-          "rehabilitation",
-          "physical therapy",
-          "family",
-          "parenting",
-          "education",
-          "podcasts",
-          "travel",
-          "outdoors",
-          "hiking",
-          "camping"
-        ]
-      };
-      const refreshedLinksForCA =
-        await repository.findAllPlatformLinksForAthleteByProvider(
-          athleteId,
-          provider
-        );
+    //       3001, 3002, 3003, 3004, 3005,
+    //       3006, 3007, 3008, 3009, 3010,
+    //       3011, 3012, 3013, 3014, 3015
+    //     ],
+    //     keywords: [
+    //       "breast cancer",
+    //       "cancer survivor",
+    //       "chemotherapy",
+    //       "oncology",
+    //       "mental health",
+    //       "depression",
+    //       "anxiety",
+    //       "ptsd",
+    //       "diabetes",
+    //       "type 1 diabetes",
+    //       "type 2 diabetes",
+    //       "heart disease",
+    //       "cardiac arrest",
+    //       "stroke",
+    //       "epilepsy",
+    //       "autism",
+    //       "adhd",
+    //       "multiple sclerosis",
+    //       "parkinson's disease",
+    //       "als",
+    //       "lupus",
+    //       "crohn's disease",
+    //       "colitis",
+    //       "arthritis",
+    //       "fibromyalgia",
+    //       "endometriosis",
+    //       "migraine",
+    //       "chronic pain",
+    //       "chronic illness",
+    //       "rare disease",
+    //       "organ donation",
+    //       "kidney disease",
+    //       "liver disease",
+    //       "lung disease",
+    //       "covid survivor",
+    //       "long covid",
+    //       "brain injury",
+    //       "spinal cord injury",
+    //       "amputee",
+    //       "prosthetic",
+    //       "disability",
+    //       "wheelchair athlete",
+    //       "blind athlete",
+    //       "deaf athlete",
+    //       "adaptive sports",
+    //       "recovery",
+    //       "rehabilitation",
+    //       "physical therapy",
+    //       "wellness",
+    //       "fitness",
+    //       "healthy lifestyle",
+    //       "nutrition",
+    //       "diet",
+    //       "protein",
+    //       "gym",
+    //       "strength training",
+    //       "weightlifting",
+    //       "crossfit",
+    //       "running",
+    //       "marathon",
+    //       "cycling",
+    //       "triathlon",
+    //       "yoga",
+    //       "pilates",
+    //       "meditation",
+    //       "mindfulness",
+    //       "sleep",
+    //       "hydration",
+    //       "performance",
+    //       "sports medicine",
+    //       "injury prevention",
+    //       "motivation",
+    //       "inspiration",
+    //       "resilience",
+    //       "perseverance",
+    //       "health advocate",
+    //       "patient advocate",
+    //       "public speaker",
+    //       "charity",
+    //       "nonprofit",
+    //       "fundraising",
+    //       "community",
+    //       "family",
+    //       "parenting",
+    //       "veteran",
+    //       "military",
+    //       "education",
+    //       "awareness",
+    //       "fundraiser",
+    //       "inclusion",
+    //       "diversity",
+    //       "empowerment",
+    //       "women's health",
+    //       "men's health",
+    //       "children's health",
+    //       "caregiver",
+    //       "mental wellness",
+    //       "positive mindset",
+    //       "hope",
+    //       "survivor story",
+    //       "life after cancer",
+    //       "health campaign"
+    //     ],
+    //     interests: [
+    //       "health",
+    //       "wellness",
+    //       "fitness",
+    //       "sports",
+    //       "nutrition",
+    //       "running",
+    //       "cycling",
+    //       "weightlifting",
+    //       "crossfit",
+    //       "basketball",
+    //       "football",
+    //       "baseball",
+    //       "soccer",
+    //       "tennis",
+    //       "golf",
+    //       "swimming",
+    //       "triathlon",
+    //       "marathon",
+    //       "olympics",
+    //       "adaptive sports",
+    //       "mental health",
+    //       "public health",
+    //       "health advocacy",
+    //       "patient advocacy",
+    //       "medical research",
+    //       "charity",
+    //       "fundraising",
+    //       "volunteering",
+    //       "community service",
+    //       "motivation",
+    //       "personal development",
+    //       "mindfulness",
+    //       "meditation",
+    //       "yoga",
+    //       "healthy eating",
+    //       "meal prep",
+    //       "supplements",
+    //       "biohacking",
+    //       "longevity",
+    //       "recovery",
+    //       "rehabilitation",
+    //       "physical therapy",
+    //       "family",
+    //       "parenting",
+    //       "education",
+    //       "podcasts",
+    //       "travel",
+    //       "outdoors",
+    //       "hiking",
+    //       "camping"
+    //     ]
+    //   };
+    //   const refreshedLinksForCA =
+    //     await repository.findAllPlatformLinksForAthleteByProvider(
+    //       athleteId,
+    //       provider
+    //     );
 
-      const platformCAResults = refreshedLinksForCA
-        .filter((link) => link.rawData)
-        .map((link) =>
-          calculateConditionAlignmentForPlatform(
-            link.platform,
-            link.rawData,
-            brandProfile
-          )
-        )
-        .filter((r): r is NonNullable<typeof r> => r !== null);
+    //   const platformCAResults = refreshedLinksForCA
+    //     .filter((link) => link.rawData)
+    //     .map((link) =>
+    //       calculateConditionAlignmentForPlatform(
+    //         link.platform,
+    //         link.rawData,
+    //         brandProfile
+    //       )
+    //     )
+    //     .filter((r): r is NonNullable<typeof r> => r !== null);
 
-      const linkedPlatformNamesForCA = refreshedLinksForCA.map(
-        (l) => l.platform
-      );
-      const normalizedWeightsForCA = calculateNormalizedWeights(
-        linkedPlatformNamesForCA
-      );
+    //   const linkedPlatformNamesForCA = refreshedLinksForCA.map(
+    //     (l) => l.platform
+    //   );
+    //   const normalizedWeightsForCA = calculateNormalizedWeights(
+    //     linkedPlatformNamesForCA
+    //   );
 
-      const { overallScore, breakdown } = calculateOverallConditionAlignment(
-        platformCAResults,
-        normalizedWeightsForCA
-      );
+    //   const { overallScore, breakdown } = calculateOverallConditionAlignment(
+    //     platformCAResults,
+    //     normalizedWeightsForCA
+    //   );
 
-      conditionAlignmentScoreForFinal = overallScore;
-      conditionAlignmentBreakdownForFinal = breakdown;
+    //   conditionAlignmentScoreForFinal = overallScore;
+    //   conditionAlignmentBreakdownForFinal = breakdown;
 
-      results.push({
-        platform: "condition-alignment-calculation",
-        status: "success",
-      });
-    } catch (caErr) {
-      results.push({
-        platform: "condition-alignment-calculation",
-        status: "failed",
-        error:
-          caErr instanceof Error
-            ? caErr.message
-            : "Condition alignment calculation failed",
-      });
-    }
-
-    // await repository.upsertAthleteFinalScore(athleteId, {
-    //   resonanceScore: resonanceScoreForFinal,
-    //   credibilityScore: credibilityScoreForFinal,
-    //   audienceTrustScore: audienceTrustScoreForFinal,
-    //   conditionAlignmentScore: conditionAlignmentScoreForFinal,
-    //   weightDistribution: normalizedWeightsForFinal,
-    //   scoreBreakdown: {
-    //     resonance: resonanceBreakdownForFinal,
-    //     credibility: credibilityBreakdownForFinal,
-    //     audienceTrust: audienceTrustBreakdownForFinal,
-    //     conditionAlignment: conditionAlignmentBreakdownForFinal,
-    //   },
-    // });
+    //   results.push({
+    //     platform: "condition-alignment-calculation",
+    //     status: "success",
+    //   });
+    // } catch (caErr) {
+    //   results.push({
+    //     platform: "condition-alignment-calculation",
+    //     status: "failed",
+    //     error:
+    //       caErr instanceof Error
+    //         ? caErr.message
+    //         : "Condition alignment calculation failed",
+    //   });
+    // }
     await repository.upsertAthleteFinalScore(athleteId, {
       resonanceScore: Math.round(resonanceScoreForFinal),
       credibilityScore: Math.round(credibilityScoreForFinal),

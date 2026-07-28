@@ -1,29 +1,29 @@
 // core/condition-alignment/condition-alignment.types.ts
 
-export interface BrandProfile {
-    categories: number[];      // HypeAuditor category IDs — brand signup se
-    keywords: string[];        // Bio match ke liye — brand signup se
-    interests: string[];       // Interest match ke liye — brand signup se
+export interface BrandAlignmentInput {
+    healthConditions: string[];   // ["Heart Disease", "Obesity"]
+    languageCodes: string[];      // ["en"]
+    preferredChannels: string[];  // ["YouTube"]
   }
   
-  export interface ConditionAlignmentWeights {
-    instagram: {
-      categoryMatch: number;   // 40
-      bioMatch: number;        // 35
-      interestMatch: number;   // 25
-    };
-    youtube: {
-      categoryMatch: number;   // 40
-      bioMatch: number;        // 35
-      interestMatch: number;   // 25
-    };
-    twitter: {
-      bioMatch: number;        // 100
-    };
+  export interface MatchedHealthCondition {
+    brandCondition: string;       // Brand ne jo diya: "Heart Disease"
+    matchedKeyword: string;       // DB mein jo match hua: "cardiac"
+    resonanceScore: number;       // Athlete ka score: 75
   }
   
-  export interface PlatformConditionAlignmentResult {
-    platform: string;
-    score: number;
-    breakdown: Record<string, number>;
+  export interface ConditionAlignmentResult {
+    overallScore: number;
+    breakdown: {
+      languageScore: number;
+      channelScore: number;
+      healthConditionScore: number;
+      hashtagScore: number;
+    };
+    details: {
+      matchedLanguage: boolean;
+      matchedChannel: boolean;
+      matchedHealthConditions: MatchedHealthCondition[];
+      matchedHashtags: string[];
+    };
   }

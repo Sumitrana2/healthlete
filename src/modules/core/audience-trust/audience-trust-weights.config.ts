@@ -9,7 +9,7 @@ export const AUDIENCE_TRUST_WEIGHTS: AudienceTrustWeights = {
     brandSafety: 25,
   },
   youtube: {
-    languageConcentration: 40,
+    audienceQuality: 40,
     reachQuality: 35,
     brandSafety: 25,
   },
@@ -20,9 +20,8 @@ export const AUDIENCE_TRUST_WEIGHTS: AudienceTrustWeights = {
   },
 };
 
-export const TARGET_LANGUAGE = "en";   // YouTube ke language concentration ke liye default
 
 export const BRAND_SAFETY_KEYWORDS = {
-  high: ["violence", "hate", "explicit", "illegal drugs", "threat"],
-  medium: ["alcohol", "aggressive", "controversial", "profanity"],
+  high: ["violence", "hate", "explicit", "illegal drugs", "threat","crime","toxic","offensive","sex","religion","politics"],
+  medium: ["alcohol", "aggressive", "controversial", "profanity","pranks"],
 };

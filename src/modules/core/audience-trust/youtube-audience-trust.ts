@@ -1,59 +1,64 @@
-// core/audience-trust/youtube-audience-trust.ts
+// // core/audience-trust/youtube-audience-trust.ts
 
 import { clamp } from "../credibility/credibility-utils";
-import { TARGET_LANGUAGE } from "./audience-trust-weights.config";
 
 interface YoutubeTrustWeights {
-  languageConcentration: number;
+  audienceQuality: number;   
   reachQuality: number;
   brandSafety: number;
 }
 
 export function calculateYoutubeAudienceTrust(
   raw: any,
-  weights: YoutubeTrustWeights,
-  targetLanguages: string[] = [TARGET_LANGUAGE]
+  weights: YoutubeTrustWeights
 ): { score: number; breakdown: Record<string, number> } {
-    const languagesData: { title: string; prc: number }[] =
-    raw?.report?.features?.audience_languages?.data ?? [];
+  const cqsValue = raw?.features?.cqs?.data?.value;                     
+  const sentimentScoreRaw = raw?.features?.audience_sentiments?.data?.score; 
 
-  const languagePercentage = languagesData
-    .filter((lang) =>
-      targetLanguages.some(
-        (target) => target.toLowerCase() === lang.title?.toLowerCase()
-      )
-    )
-    .reduce((sum, lang) => sum + (lang.prc ?? 0), 0);
+  const validScores = [cqsValue, sentimentScoreRaw].filter(
+    (v): v is number => v !== undefined && v !== null
+  );
 
-  const languageScore =
-    clamp(languagePercentage / 100, 0, 1) * weights.languageConcentration;
+  let audienceQualityScore: number;
+  if (!validScores.length) {
+    audienceQualityScore = weights.audienceQuality / 2;   // neutral fallback
+  } else {
+    const avgRawScore = validScores.reduce((sum, v) => sum + v, 0) / validScores.length;
+    audienceQualityScore = clamp(avgRawScore / 100, 0, 1) * weights.audienceQuality;
+  }
 
-  const viewsAvg90d = raw?.report?.metrics?.views_avg?.performance?.["90d"]?.value ?? 0;
-  const subscribersCount = raw?.metrics_history?.subscribers_count?.value ?? 0;
+  // 2. Audience Reach Quality
+  const viewsAvg90d = raw?.metrics?.views_avg?.performance?.["90d"]?.value ?? 0;
+  const subscribersCount = raw?.metrics?.subscribers_count?.value ?? 0;
 
   const viewRate = subscribersCount > 0 ? viewsAvg90d / subscribersCount : 0;
   const reachScore = clamp(viewRate / 0.01, 0, 1) * weights.reachQuality;
 
   // 3. Brand Safety
-  const brandSafetyData = raw?.report?.features?.brand_safety?.data;
+  const brandSafetyData = raw?.features?.brand_safety?.data;
 
   let brandSafetyScore: number;
-  if (!brandSafetyData) {
-    brandSafetyScore = weights.brandSafety / 2;   // neutral fallback (jaisa example mein 12.5)
+  if (!brandSafetyData || typeof brandSafetyData !== "object") {
+    brandSafetyScore = weights.brandSafety / 2;
   } else {
     const categories = Object.values(brandSafetyData) as boolean[];
     const totalChecks = categories.length;
-    const riskFlags = categories.filter((v) => v === true).length;
-    const safetyRatio = totalChecks > 0 ? (totalChecks - riskFlags) / totalChecks : 0.5;
-    brandSafetyScore = safetyRatio * weights.brandSafety;
+
+    if (totalChecks === 0) {
+      brandSafetyScore = weights.brandSafety / 2;
+    } else {
+      const riskFlags = categories.filter((v) => v === true).length;
+      const safetyRatio = (totalChecks - riskFlags) / totalChecks;
+      brandSafetyScore = safetyRatio * weights.brandSafety;
+    }
   }
 
-  const totalScore = languageScore + reachScore + brandSafetyScore;
+  const totalScore = audienceQualityScore + reachScore + brandSafetyScore;
 
   return {
     score: Math.round(totalScore * 100) / 100,
     breakdown: {
-      languageConcentration: Math.round(languageScore * 100) / 100,
+      audienceQuality: Math.round(audienceQualityScore * 100) / 100,
       reachQuality: Math.round(reachScore * 100) / 100,
       brandSafety: Math.round(brandSafetyScore * 100) / 100,
     },

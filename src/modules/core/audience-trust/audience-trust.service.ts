@@ -20,8 +20,8 @@ export function calculateAudienceTrustForPlatform(
     }
     case "youtube": {
       const result = calculateYoutubeAudienceTrust(
+        rawData,
         AUDIENCE_TRUST_WEIGHTS.youtube,
-        rawData
       );
       return { platform, score: result.score, breakdown: result.breakdown };
     }
@@ -40,20 +40,27 @@ export function calculateAudienceTrustForPlatform(
 export function calculateOverallAudienceTrust(
   platformResults: PlatformAudienceTrustResult[],
   platformWeights: Record<string, number>
-): { overallScore: number; breakdown: PlatformAudienceTrustResult[] } {
+): { overallScore: number; breakdown: PlatformAudienceTrustResult[],brandOverSafetyAllScore:number } {
   let weightedSum = 0;
+  let brandSafetyWeightedSum = 0;
   let totalWeight = 0;
 
+  
   for (const result of platformResults) {
     const weight = platformWeights[result.platform] ?? 0;
     weightedSum += result.score * (weight / 100);
+    brandSafetyWeightedSum += result.breakdown.brandSafety * (weight / 100);
     totalWeight += weight;
   }
 
   const overallScore = totalWeight > 0 ? weightedSum : 0;
+  const brandOverSafetyAllScore = brandSafetyWeightedSum > 0 ? brandSafetyWeightedSum : 0;
+  console.log(brandOverSafetyAllScore,"brandOverSafetyAllScore");
+  
 
   return {
     overallScore: Math.round(overallScore * 100) / 100,
     breakdown: platformResults,
+    brandOverSafetyAllScore
   };
 }

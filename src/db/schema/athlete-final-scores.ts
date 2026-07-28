@@ -22,6 +22,8 @@ export const athleteFinalScores = pgTable(
     resonanceScore: decimal("resonance_score", { precision: 5, scale: 2 }),   
     credibilityScore: decimal("credibility_score", { precision: 5, scale: 2 }),
     audienceTrustScore: decimal("audience_trust_score", { precision: 5, scale: 2 }),
+    brandOverSafetyScore: decimal("brand_safety_score", { precision: 5, scale: 2 }),
+    
     conditionAlignmentScore: decimal("condition_alignment_score", { precision: 5, scale: 2 }),
     healthleteMatchScore: decimal("healthlete_match_score", { precision: 5, scale: 2 }),
 

@@ -432,10 +432,11 @@ export async function upsertAthleteFinalScore(
     resonanceScore?: number;
     credibilityScore?: number;
     audienceTrustScore?: number;
+    brandOverSafetyScore?: unknown;
     conditionAlignmentScore?: number;
     healthleteMatchScore?: number;
     weightDistribution?: unknown;
-    scoreBreakdown?: unknown;
+    scoreBreakdown?: unknown;    
   }
 ) {
   await db

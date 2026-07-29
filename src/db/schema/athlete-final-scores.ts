@@ -6,6 +6,7 @@ import {
   jsonb,
   index,
   uniqueIndex,
+  integer,
 } from "drizzle-orm/pg-core";
 
 import { athletes } from "./athletes";
@@ -30,6 +31,11 @@ export const athleteFinalScores = pgTable(
     weightDistribution: jsonb("weight_distribution"),  
     scoreBreakdown: jsonb("score_breakdown"),        
 
+    avgEngagementRate: decimal("avg_engagement_rate", { precision: 5, scale: 2 }),
+    avgLikes: integer("avg_likes"),
+    avgComments: integer("avg_comments"),
+    engagementQualityScore: decimal("engagement_quality_score", { precision: 5, scale: 2 }),
+        
     calculatedAt: timestamp("calculated_at").defaultNow().notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),

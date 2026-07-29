@@ -24,6 +24,7 @@ export const athletes = pgTable(
     isActive: boolean("is_active").default(true),
     categories: jsonb("categories"),
     healthConditions: jsonb("health_conditions"),
+    personalHealthConnections: jsonb("personalHealthConnections"),
     gender: varchar("gender", { length: 20 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),

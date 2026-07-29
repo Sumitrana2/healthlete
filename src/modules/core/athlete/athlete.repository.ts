@@ -341,9 +341,8 @@ export async function updateAthleteAggregatedFields(
       ...(data.languages !== undefined && { languages: data.languages }),
       ...(data.emails !== undefined && { emails: data.emails }),
       ...(data.categories !== undefined && { categories: data.categories }),
-      ...(data.healthConditions !== undefined && {
-        healthConditions: data.healthConditions,
-      }),
+      ...(data.healthConditions !== undefined && {healthConditions: data.healthConditions}),
+      ...(data.personalHealthConnections !== undefined && {personalHealthConnections: data.personalHealthConnections,}),
       updatedAt: new Date(),
       isActive: true,
     })
@@ -433,27 +432,47 @@ export async function upsertAthleteFinalScore(
     credibilityScore?: number;
     audienceTrustScore?: number;
     brandOverSafetyScore?: unknown;
+    avgEngagementRate?: number | null;   
+    avgLikes?: number | null;             
+    avgComments?: number | null;          
     conditionAlignmentScore?: number;
     healthleteMatchScore?: number;
     weightDistribution?: unknown;
+    engagementQualityScore?: unknown;
     scoreBreakdown?: unknown;    
   }
 ) {
-  await db
-    .insert(athleteFinalScores)
-    .values({
-      athleteId,
-      ...data,
-      calculatedAt: new Date(),
-    } as any)
-    .onConflictDoUpdate({
-      target: athleteFinalScores.athleteId,
-      set: {
+
+  try {
+    console.log("Before upsert");
+
+    await db
+      .insert(athleteFinalScores)
+      .values({
+        athleteId,
         ...data,
         calculatedAt: new Date(),
-        updatedAt: new Date(),
-      } as any,
+      } as any)
+      .onConflictDoUpdate({
+        target: athleteFinalScores.athleteId,
+        set: {
+          ...data,
+          calculatedAt: new Date(),
+          updatedAt: new Date(),
+        } as any,
+      });
+
+    console.log("After upsert");
+
+    const row = await db.query.athleteFinalScores.findFirst({
+      where: eq(athleteFinalScores.athleteId, athleteId),
     });
+
+    console.log("Updated row:", row);
+  } catch (err) {
+    console.error("Upsert error:", err);
+    throw err;
+  }
 }
 
 export async function findAthleteFinalScore(athleteId: string) {

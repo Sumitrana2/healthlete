@@ -18,7 +18,7 @@ export async function enrichAthleteData(
       Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
     },
     body: JSON.stringify({
-        model: "gpt-4.1-2025-04-14",
+      model: "gpt-4.1-2025-04-14",
       // model: "gpt-5.5",
       messages: [
         {
@@ -34,7 +34,7 @@ export async function enrichAthleteData(
 
   if (!response.ok) {
     const err = await response.text();
-    console.log(err,"errerrerrerr");
+    console.log(err, "errerrerrerr");
     throw new AppError(502, `OpenAI API failed: ${response.status}`);
   }
 
@@ -55,6 +55,7 @@ export async function enrichAthleteData(
       categories: parsed.categories ?? [],
       gender: parsed.gender ?? null,
       healthConditions: parsed.healthConditions ?? [],
+      personalHealthConnections: parsed.personalHealthConnections ?? [],
     };
   } catch {
     throw new AppError(502, "Failed to parse OpenAI response");
@@ -105,7 +106,7 @@ export async function enrichAthleteData(
 //   return `
 //   Athlete Name: ${input.fullName}
 //   Known usernames/handles: ${input.usernames.join(", ") || "(none)"}
-  
+
 //   Based on publicly available knowledge about this specific athlete, return a JSON object with these fields:
 //   {
 //     "country": "ISO 3166-1 alpha-2 country code (e.g. IN, US) or null if unknown",
@@ -116,19 +117,18 @@ export async function enrichAthleteData(
 //     "gender": "male, female, or null if unknown",
 //     "healthConditions": ["Think carefully about what you actually know about THIS specific athlete's health history and public advocacy. Consider: Have they publicly disclosed a specific illness, diagnosis, injury, or disability? Have they survived a specific disease (e.g. cancer) and spoken about it publicly? Do they specifically campaign for a named health cause (e.g. breast cancer awareness, mental health, a specific charity they founded)? If yes to any of these for THIS athlete, include it as a specific tag (e.g. 'Breast Cancer', 'Cancer Survivor', 'Mental Health Advocate') alongside their sport. Only fall back to just their sport/fitness domain if you genuinely have no specific knowledge of any health-related history or advocacy for this person — do not default to the sport-only answer out of caution when you do have relevant knowledge."]
 //   }
-  
+
 //   Draw on your full knowledge of this specific athlete's public history, not just their sport. Do not fabricate facts you are unsure about, but do not omit facts you do know either.
 //   `.trim();
 // }
-
 
 // function buildPrompt(input: AIEnrichmentInput): string {
 //     return `
 //   Athlete Name: ${input.fullName}
 //   Known usernames/handles: ${input.usernames.join(", ") || "(none)"}
-  
+
 //   Using reliable publicly available knowledge about THIS SPECIFIC athlete, return ONLY a valid JSON object in the following format:
-  
+
 //   {
 //     "country": "ISO 3166-1 alpha-2 country code or null",
 //     "countryName": "Full country name or null",
@@ -138,15 +138,15 @@ export async function enrichAthleteData(
 //     "gender": "male | female | null",
 //     "healthConditions": ["Relevant health-related tags"]
 //   }
-  
+
 //   Rules:
-  
+
 //   1. Return ONLY valid JSON.
-  
+
 //   2. Base every field only on reliable publicly available information about THIS athlete.
-  
+
 //   3. Never fabricate facts. If information cannot be reasonably determined, return null or [].
-  
+
 //   4. Categories:
 //      - Return multiple relevant categories whenever possible.
 //      - Include sport(s), profession(s), achievements, public roles and advocacy.
@@ -159,12 +159,12 @@ export async function enrichAthleteData(
 //        - Commentator
 //        - Influencer
 //        - Mental Health Advocate
-  
+
 //   5. HealthConditions:
 //      Think beyond diagnosed diseases.
-  
+
 //      Return ALL publicly documented health-related tags associated with this athlete.
-  
+
 //      This may include:
 //      - Medical conditions
 //      - Chronic illnesses
@@ -180,9 +180,9 @@ export async function enrichAthleteData(
 //      - Health awareness campaigns
 //      - Health-related charities or foundations
 //      - Disease survivor status
-  
+
 //      Use the MOST SPECIFIC tags possible.
-  
+
 //      Examples:
 //      - ACL Tear
 //      - Knee Injury
@@ -200,25 +200,134 @@ export async function enrichAthleteData(
 //      - Breast Cancer
 //      - Mental Health Advocate
 //      - Autism Awareness
-  
+
 //      These are ONLY EXAMPLES.
-  
+
 //      If THIS athlete has another publicly documented injury, surgery, illness, disability, recovery, advocacy, or health-related achievement that is not listed above, return that instead.
-  
+
 //      Return every relevant tag you know.
-  
+
 //      Return [] ONLY if there is no reliable publicly documented health-related information about this athlete.
-  
+
 //   6. Prefer specificity over generic terms.
 //      For example:
 //      - "ACL Tear" is better than "Leg Injury"
 //      - "Finger Fracture" is better than "Fracture"
 //      - "Breast Cancer Survivor" is better than "Cancer"
-  
+
 //   Return ONLY the JSON object.
 //   `.trim();
 //   }
 
+// function buildPrompt(input: AIEnrichmentInput): string {
+//   return `
+// Athlete Name: ${input.fullName}
+// Known usernames/handles: ${input.usernames.join(", ") || "(none)"}
+
+// Using reliable publicly available knowledge about THIS SPECIFIC athlete, return ONLY a valid JSON object with the following structure:
+
+// {
+//   "country": "ISO 3166-1 alpha-2 country code or null",
+//   "countryName": "Full country name or null",
+//   "description": "A concise 1-2 sentence biography or null",
+//   "languages": ["ISO 639-1 language codes only"],
+//   "categories": ["Relevant categories"],
+//   "gender": "male | female | null",
+//   "healthConditions": ["Relevant health-related tags"]
+// }
+
+// Rules:
+
+// 1. Return ONLY valid JSON. Do not include markdown or explanations.
+
+// 2. Base every field ONLY on reliable publicly available information about THIS athlete.
+
+// 3. Never fabricate, infer or assume facts that are not publicly documented.
+
+// 4. If information cannot be reliably determined:
+//    - Return null for scalar fields.
+//    - Return [] for array fields.
+
+// 5. Categories:
+//    - Return multiple relevant categories whenever possible.
+//    - Include:
+//      - Primary sport(s)
+//      - Profession(s)
+//      - Major public role(s)
+//      - Coaching roles
+//      - Commentary roles
+//      - Authorship
+//      - Public advocacy
+//      - Other notable identities associated with the athlete.
+
+// 6. HealthConditions:
+
+//    Think broadly about health-related information instead of only diagnosed diseases.
+
+//    Carefully recall the athlete's complete publicly known health history before answering.
+
+//    Consider whether the athlete has publicly documented:
+
+//    • Medical conditions
+//    • Chronic illnesses
+//    • Diseases
+//    • Disabilities
+//    • Paralympic classifications
+//    • Major sports injuries
+//    • Fractures
+//    • Surgeries
+//    • Rehabilitation
+//    • Significant recoveries
+//    • Mental health disclosures
+//    • Disease survivor status
+//    • Health advocacy
+//    • Health awareness campaigns
+//    • Health-related charities or foundations
+//    • Other notable health-related public contributions
+
+//    Include multiple tags whenever applicable.
+
+//    Use the MOST SPECIFIC tag possible.
+
+//    Good examples:
+//    - ACL Tear
+//    - Achilles Tendon Rupture
+//    - Hamstring Injury
+//    - Finger Fracture
+//    - Shoulder Surgery
+//    - Back Injury
+//    - Asthma
+//    - Type 1 Diabetes
+//    - ADHD
+//    - Depression
+//    - Anxiety
+//    - Breast Cancer Survivor
+//    - Throat Cancer Survivor
+//    - Cancer Survivor
+//    - Sjögren's Syndrome
+//    - HIV
+//    - Mental Health Advocate
+//    - Breast Cancer Awareness
+
+//    These are examples only.
+
+//    Do NOT limit yourself to these values.
+
+//    If another publicly documented health-related tag is more appropriate, return that instead.
+
+//    Include major injuries only if they were publicly documented and became a notable part of the athlete's career.
+
+//    Do not include routine, temporary or insignificant injuries.
+
+// 7. Before producing the final JSON, silently review whether there are any additional reliable health-related facts associated with this athlete that have not yet been included.
+
+// 8. Return every reliable health-related tag you can identify.
+
+// 9. If no reliable publicly documented health-related information exists, return an empty array.
+
+// Return ONLY the JSON object.
+// `.trim();
+// }
 function buildPrompt(input: AIEnrichmentInput): string {
   return `
 Athlete Name: ${input.fullName}
@@ -233,97 +342,132 @@ Using reliable publicly available knowledge about THIS SPECIFIC athlete, return 
   "languages": ["ISO 639-1 language codes only"],
   "categories": ["Relevant categories"],
   "gender": "male | female | null",
-  "healthConditions": ["Relevant health-related tags"]
+  "healthConditions": ["Relevant health-related tags"],
+  "personalHealthConnections": [
+    {
+      "condition": "Health condition",
+      "relationship": "self | immediate_family",
+      "reason": "Short factual explanation"
+    }
+  ]
 }
 
 Rules:
 
-1. Return ONLY valid JSON. Do not include markdown or explanations.
+1. Return ONLY valid JSON. Do not include markdown, explanations or additional text.
 
-2. Base every field ONLY on reliable publicly available information about THIS athlete.
+2. Base every field ONLY on reliable, publicly documented information about THIS athlete.
 
-3. Never fabricate, infer or assume facts that are not publicly documented.
+3. Never fabricate, infer or assume facts.
 
-4. If information cannot be reliably determined:
+4. If information cannot be reliably verified:
    - Return null for scalar fields.
    - Return [] for array fields.
 
 5. Categories:
-   - Return multiple relevant categories whenever possible.
-   - Include:
-     - Primary sport(s)
-     - Profession(s)
-     - Major public role(s)
-     - Coaching roles
-     - Commentary roles
-     - Authorship
-     - Public advocacy
-     - Other notable identities associated with the athlete.
+   Return all relevant categories whenever possible, including:
+   - Primary sport(s)
+   - Profession(s)
+   - Coaching roles
+   - Commentary roles
+   - Authorship
+   - Public advocacy
+   - Other notable public identities
 
-6. HealthConditions:
+6. healthConditions
 
-   Think broadly about health-related information instead of only diagnosed diseases.
+   Return every publicly documented health-related tag associated with the athlete.
 
-   Carefully recall the athlete's complete publicly known health history before answering.
+   Consider:
+   - Medical conditions
+   - Chronic illnesses
+   - Diseases
+   - Disabilities
+   - Paralympic classifications
+   - Major career-defining injuries
+   - Major surgeries
+   - Rehabilitation
+   - Disease survivor status
+   - Mental health conditions publicly disclosed
+   - Health advocacy
+   - Awareness campaigns
+   - Health-related charities
+   - Other notable health-related public contributions
 
-   Consider whether the athlete has publicly documented:
+   Use the MOST SPECIFIC tags possible.
 
-   • Medical conditions
-   • Chronic illnesses
-   • Diseases
-   • Disabilities
-   • Paralympic classifications
-   • Major sports injuries
-   • Fractures
-   • Surgeries
-   • Rehabilitation
-   • Significant recoveries
-   • Mental health disclosures
-   • Disease survivor status
-   • Health advocacy
-   • Health awareness campaigns
-   • Health-related charities or foundations
-   • Other notable health-related public contributions
-
-   Include multiple tags whenever applicable.
-
-   Use the MOST SPECIFIC tag possible.
-
-   Good examples:
+   Examples:
    - ACL Tear
    - Achilles Tendon Rupture
-   - Hamstring Injury
-   - Finger Fracture
-   - Shoulder Surgery
-   - Back Injury
-   - Asthma
-   - Type 1 Diabetes
-   - ADHD
-   - Depression
-   - Anxiety
    - Breast Cancer Survivor
    - Throat Cancer Survivor
-   - Cancer Survivor
-   - Sjögren's Syndrome
+   - Type 1 Diabetes
+   - Asthma
+   - ADHD
+   - Depression
    - HIV
    - Mental Health Advocate
    - Breast Cancer Awareness
 
-   These are examples only.
-
-   Do NOT limit yourself to these values.
-
-   If another publicly documented health-related tag is more appropriate, return that instead.
-
-   Include major injuries only if they were publicly documented and became a notable part of the athlete's career.
-
    Do not include routine, temporary or insignificant injuries.
 
-7. Before producing the final JSON, silently review whether there are any additional reliable health-related facts associated with this athlete that have not yet been included.
+7. personalHealthConnections
 
-8. Return every reliable health-related tag you can identify.
+   This field represents ONLY genuine PERSONAL connections.
 
-9. If no reliable publicly documented health-related information exists, return an empty array.
+   Include an entry ONLY if one of the following is publicly documented:
+
+   • The athlete personally had, has, or survived the condition.
+   • The athlete publicly disclosed having the condition.
+   • The athlete suffered the major injury.
+   • An immediate family member (parent, sibling, spouse or child) had the condition AND the athlete has publicly discussed that connection.
+
+   relationship values:
+   - self
+   - immediate_family
+
+   reason:
+   A short factual explanation describing the documented connection.
+
+   Examples:
+
+   {
+     "condition": "Breast Cancer",
+     "relationship": "self",
+     "reason": "Publicly diagnosed with breast cancer in 2010."
+   }
+
+   {
+     "condition": "ADHD",
+     "relationship": "self",
+     "reason": "Publicly stated that he was diagnosed with ADHD during childhood."
+   }
+
+   {
+     "condition": "Breast Cancer",
+     "relationship": "immediate_family",
+     "reason": "Publicly discussed that his mother had breast cancer."
+   }
+
+8. IMPORTANT
+
+   Do NOT include:
+   - Awareness posts only.
+   - Charity work only.
+   - Campaign participation only.
+   - General support for a cause.
+   - Generic health or fitness discussions.
+   - Nutrition or workout habits.
+   - Temporary injuries.
+   - Rumours or unverified reports.
+
+   These belong in healthConditions only if appropriate, but NEVER in personalHealthConnections unless there is a genuine documented personal or immediate family connection.
+
+9. If there is NO reliable evidence of a personal or immediate family connection, return:
+
+   "personalHealthConnections": []
+
+10. Before returning the JSON, silently verify that every item in personalHealthConnections is supported by well-known public documentation.
 
 Return ONLY the JSON object.
 `.trim();

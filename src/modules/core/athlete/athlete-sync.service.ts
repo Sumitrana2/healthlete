@@ -6,7 +6,10 @@ import { enrichAthleteData } from "../ai/ai.client";
 
 import { findOrCreateResonanceCondition } from "../resonance/resonance-condition.service";
 import { extractTextFromRawData } from "../resonance/text-extractor";
-import { calculateResonanceForCondition } from "../resonance/resonance-calculator";
+import {
+  calculateResonanceForCondition,
+  calculateResonancePersonalHealthCondition,
+} from "../resonance/resonance-calculator";
 import * as resonanceRepo from "../resonance/resonance-condition.repository";
 import {
   normalizeInstagramMedia,
@@ -23,6 +26,8 @@ import {
   calculateAudienceTrustForPlatform,
   calculateOverallAudienceTrust,
 } from "../audience-trust/audience-trust.service";
+import { EngagementQualityResult } from "../engagement/engagement.types";
+import { calculateEngagementQuality } from "../engagement/engagement.service";
 
 export async function syncAthleteData(athleteId: string, provider: string) {
   const athlete = await repository.findAthleteById(athleteId);
@@ -74,6 +79,7 @@ export async function syncAthleteData(athleteId: string, provider: string) {
       }
     }
 
+    let personalHealthConnections: any = null;
     // ── Step 2 — AI enrichment ──────────────────────────────────────────────────
     try {
       const aiResult = await enrichAthleteData({
@@ -90,7 +96,14 @@ export async function syncAthleteData(athleteId: string, provider: string) {
         languages: aiResult.languages ?? [],
         categories: aiResult.categories ?? [],
         healthConditions: aiResult.healthConditions ?? [],
+        personalHealthConnections: aiResult.personalHealthConnections ?? [],
       });
+
+      personalHealthConnections = aiResult.personalHealthConnections;
+      console.log(
+        aiResult.personalHealthConnections,
+        "aiResult.personalHealthConnections"
+      );
 
       results.push({ platform: "ai-enrichment", status: "success" });
     } catch (aiErr) {
@@ -110,54 +123,65 @@ export async function syncAthleteData(athleteId: string, provider: string) {
       const currentHealthConditions =
         (refreshedAthlete?.healthConditions as string[]) ?? [];
 
-      if (currentHealthConditions.length) {
-        await repository.deleteAthleteResonanceScores(athleteId);
+      // if (currentHealthConditions.length) {
+      await repository.deleteAthleteResonanceScores(athleteId);
 
-        const resonanceConditionRecords = [];
-        for (const tag of currentHealthConditions) {
-          const record = await findOrCreateResonanceCondition(tag);
-          resonanceConditionRecords.push(record);
-        }
-
-        const refreshedLinks =
-          await repository.findAllPlatformLinksForAthleteByProvider(
-            athleteId,
-            provider
-          );
-
-        const extractedTexts = refreshedLinks
-          .filter((link) => link.rawData)
-          .map((link) =>
-            extractTextFromRawData(link.provider, link.platform, link.rawData)
-          );
-
-        const resonanceScores = resonanceConditionRecords.map((condition) =>
-          calculateResonanceForCondition(
-            {
-              id: condition.id,
-              condition: condition.name,
-              keywords: (condition.keywords as string[]) ?? [],
-              hashtags: (condition.hashtags as string[]) ?? [],
-            },
-            extractedTexts
-          )
-        );
-
-        await resonanceRepo.saveAthleteResonanceScores(
-          athleteId,
-          resonanceScores
-        );
-
-        const resonanceSummary = await repository.getResonanceSummary(
-          athleteId
-        );
-        resonanceScoreForFinal = resonanceSummary.averageScore;
-        resonanceBreakdownForFinal = {
-          max: resonanceSummary.maxScore,
-          maxCondition: resonanceSummary.maxCondition,
-          details: resonanceSummary.breakdown,
-        };
+      const resonanceConditionRecords = [];
+      for (const tag of currentHealthConditions) {
+        const record = await findOrCreateResonanceCondition(tag);
+        resonanceConditionRecords.push(record);
       }
+
+      const refreshedLinks =
+        await repository.findAllPlatformLinksForAthleteByProvider(
+          athleteId,
+          provider
+        );
+
+      const extractedTexts = refreshedLinks
+        .filter((link) => link.rawData)
+        .map((link) =>
+          extractTextFromRawData(link.provider, link.platform, link.rawData)
+        );
+
+      const resonanceScores = resonanceConditionRecords.map((condition) =>
+        calculateResonanceForCondition(
+          {
+            id: condition.id,
+            condition: condition.name,
+            keywords: (condition.keywords as string[]) ?? [],
+            hashtags: (condition.hashtags as string[]) ?? [],
+          },
+          extractedTexts
+        )
+      );
+
+      await resonanceRepo.saveAthleteResonanceScores(
+        athleteId,
+        resonanceScores
+      );
+
+      const resonanceSummary = await repository.getResonanceSummary(athleteId);
+
+      const personalHealthScore = calculateResonancePersonalHealthCondition(
+        resonanceConditionRecords.map((c) => ({
+          condition: c.name,
+        })),
+        personalHealthConnections
+      );
+
+      resonanceScoreForFinal =
+        resonanceSummary.averageScore + personalHealthScore.score;
+      resonanceBreakdownForFinal = {
+        max: resonanceSummary.maxScore,
+        maxCondition: resonanceSummary.maxCondition,
+        personalHealthConnection: {
+          score: personalHealthScore.score,
+          matched: personalHealthScore.matched,
+          unmatched: personalHealthScore.unmatched,
+        },
+        details: resonanceSummary.breakdown,
+      };
 
       results.push({ platform: "resonance-calculation", status: "success" });
     } catch (resonanceErr) {
@@ -240,16 +264,15 @@ export async function syncAthleteData(athleteId: string, provider: string) {
         linkedPlatformNamesForTrust
       );
 
-      console.log(platformTrustResults,"platformTrustResults");
-      
-      const { overallScore, breakdown,brandOverSafetyAllScore } = calculateOverallAudienceTrust(
-        platformTrustResults,
-        normalizedWeightsForTrust
-      );
+      const { overallScore, breakdown, brandOverSafetyAllScore } =
+        calculateOverallAudienceTrust(
+          platformTrustResults,
+          normalizedWeightsForTrust
+        );
 
       audienceTrustScoreForFinal = overallScore;
       audienceTrustBreakdownForFinal = breakdown;
-      brandOverSafetyScore=brandOverSafetyAllScore
+      brandOverSafetyScore = brandOverSafetyAllScore;
 
       results.push({
         platform: "audience-trust-calculation",
@@ -266,23 +289,75 @@ export async function syncAthleteData(athleteId: string, provider: string) {
       });
     }
 
-    // ── Step 7 — Condition Alignment calculate karo ──────────────────────────────
+    // ── Step 7 — Engagement Quality ─────────────────────────────────────────────
+    let engagementResultForFinal: EngagementQualityResult | null = null;
+
+    try {
+      const refreshedLinksForEngagement =
+        await repository.findAllPlatformLinksForAthleteByProvider(
+          athleteId,
+          provider
+        );
+
+      const linksWithRawData = refreshedLinksForEngagement
+        .filter((link) => link.rawData)
+        .map((link) => ({ platform: link.platform, rawData: link.rawData }));
+
+      const linkedPlatformNames = refreshedLinksForEngagement.map(
+        (l) => l.platform
+      );
+      const normalizedWeights = calculateNormalizedWeights(linkedPlatformNames);
+
+      engagementResultForFinal = calculateEngagementQuality(
+        linksWithRawData,
+        normalizedWeights
+      );
+
+      results.push({ platform: "engagement-calculation", status: "success" });
+    } catch (engagementErr) {
+      results.push({
+        platform: "engagement-calculation",
+        status: "failed",
+        error:
+          engagementErr instanceof Error
+            ? engagementErr.message
+            : "Engagement calculation failed",
+      });
+    }
+
     let conditionAlignmentScoreForFinal = 0;
     let conditionAlignmentBreakdownForFinal: any = null;
 
-    
     await repository.upsertAthleteFinalScore(athleteId, {
       resonanceScore: Math.round(resonanceScoreForFinal),
       credibilityScore: Math.round(credibilityScoreForFinal),
       audienceTrustScore: Math.round(audienceTrustScoreForFinal),
       brandOverSafetyScore: Math.round(brandOverSafetyScore),
+      avgEngagementRate:
+        engagementResultForFinal?.avgEngagementRate != null
+          ? Math.round(engagementResultForFinal.avgEngagementRate)
+          : null,
+
+      avgLikes:
+        engagementResultForFinal?.avgLikes != null
+          ? Math.round(engagementResultForFinal.avgLikes)
+          : null,
+
+      avgComments:
+        engagementResultForFinal?.avgComments != null
+          ? Math.round(engagementResultForFinal.avgComments)
+          : null,
       conditionAlignmentScore: Math.round(conditionAlignmentScoreForFinal),
       weightDistribution: normalizedWeightsForFinal,
+      engagementQualityScore:
+        engagementResultForFinal?.engagementQualityScore ?? null,
+
       scoreBreakdown: {
         resonance: resonanceBreakdownForFinal,
         credibility: credibilityBreakdownForFinal,
         audienceTrust: audienceTrustBreakdownForFinal,
         conditionAlignment: conditionAlignmentBreakdownForFinal,
+        engagement: engagementResultForFinal?.breakdown ?? [],
       },
     });
     await repository.upsertAthleteProvider(athleteId, provider, "completed");

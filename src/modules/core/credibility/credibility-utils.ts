@@ -9,9 +9,9 @@ export function clamp(value: number, min: number, max: number): number {
       case "great":
         return 1.0;
       case "average":
-        return 0.5;
+        return 0.6;
       case "poor":
-        return 0.0;
+        return 0.3;
       default:
         return 0.0;
     }

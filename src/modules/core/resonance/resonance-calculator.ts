@@ -1,3 +1,4 @@
+import { PersonalHealthConnection, PersonalHealthScoreResult } from "../athlete/athlete.types";
 import { ExtractedText } from "./text-extractor";
 
 export interface ResonanceResult {
@@ -20,10 +21,10 @@ export interface ResonanceResult {
   }
   
   const WEIGHTS = {
-    bio: 40,
-    hashtag: 25,
-    caption: 20,
-    videoTitle: 15,
+    bio: 30,
+    hashtag: 20,
+    caption: 15,
+    videoTitle: 5,
   };
   
   function normalizeText(text: string): string {
@@ -87,4 +88,77 @@ export interface ResonanceResult {
       score,
       matchedIn: { bio: bioMatch, hashtagCount, captionCount, videoTitleCount },
     };
+  }
+
+
+  export function calculateResonancePersonalHealthCondition(
+    resonanceConditions: { condition: string }[],
+    personalHealthConnections: PersonalHealthConnection[]
+  ): PersonalHealthScoreResult {
+  
+    const matched: PersonalHealthScoreResult["matched"] = [];
+    const unmatched: string[] = [];
+  
+    for (const resonance of resonanceConditions) {
+  
+      let found = false;
+  
+      for (const personal of personalHealthConnections) {
+  
+        if (hasTokenMatch(personal.condition, resonance.condition)) {
+  
+          matched.push({
+            condition: resonance.condition,
+            matchedBy: "condition",
+            relationship: personal.relationship
+          });
+  
+          found = true;
+          break;
+        }
+  
+        if (hasTokenMatch(personal.reason, resonance.condition)) {
+  
+          matched.push({
+            condition: resonance.condition,
+            matchedBy: "reason",
+            relationship: personal.relationship
+          });
+  
+          found = true;
+          break;
+        }
+      }
+  
+      if (!found) {
+        unmatched.push(resonance.condition);
+      }
+    }
+  
+    const percentage =
+      resonanceConditions.length === 0
+        ? 0
+        : matched.length / resonanceConditions.length;
+  
+    const score = Math.round(percentage * 30);
+  
+    return {
+      score,
+      matched,
+      unmatched
+    };
+  }
+  function normalize(text: string) {
+    return text
+      .toLowerCase()
+      .replace(/[^a-z0-9 ]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+  
+  function hasTokenMatch(a: string, b: string): boolean {
+    const aWords = new Set(normalize(a).split(" "));
+    const bWords = normalize(b).split(" ");
+  
+    return bWords.some(word => word.length > 2 && aWords.has(word));
   }

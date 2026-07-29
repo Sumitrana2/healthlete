@@ -71,6 +71,20 @@
       "when": 1785242404054,
       "tag": "0009_familiar_joshua_kane",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1785306177919,
+      "tag": "0010_rainy_azazel",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1785319546691,
+      "tag": "0011_wise_starbolt",
+      "breakpoints": true
     }
   ]
 }

@@ -28,10 +28,10 @@ export function calculateYoutubeAudienceTrust(
   }
 
   // 2. Audience Reach Quality
-  const viewsAvg90d = raw?.metrics?.views_avg?.performance?.["90d"]?.value ?? 0;
+  const viewAll = raw?.metrics?.views_avg?.performance?.["all"]?.value ?? 0;
   const subscribersCount = raw?.metrics?.subscribers_count?.value ?? 0;
 
-  const viewRate = subscribersCount > 0 ? viewsAvg90d / subscribersCount : 0;
+  const viewRate = subscribersCount > 0 ? viewAll / subscribersCount : 0;
   const reachScore = clamp(viewRate / 0.01, 0, 1) * weights.reachQuality;
 
   // 3. Brand Safety

@@ -78,6 +78,7 @@ export interface AthleteAggregatedFields {
   emails?: string[];
   categories?: string[];
   healthConditions?: string[];  
+  personalHealthConnections?: PersonalHealthConnection[];
 }
 
 export interface PlatformSyncUpdate {
@@ -96,6 +97,12 @@ export interface AIEnrichmentInput {
   usernames: string[];
 }
 
+export interface PersonalHealthConnection {
+  condition: string;
+  relationship: string;
+  reason: string;
+}
+
 export interface AIEnrichmentResult {
   country?: string | null;
   countryName?: string | null; 
@@ -104,4 +111,15 @@ export interface AIEnrichmentResult {
   categories?: string[];
   gender?: string | null;
   healthConditions?: string[];
+  personalHealthConnections: PersonalHealthConnection[];
+}
+
+export interface PersonalHealthScoreResult {
+  score: number;
+  matched: {
+    condition: string;
+    matchedBy: "condition" | "reason";
+    relationship: string;
+  }[];
+  unmatched: string[];
 }
